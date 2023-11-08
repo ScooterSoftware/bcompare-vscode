@@ -1,0 +1,177 @@
+{
+  "name": "beyondcompareintegration",
+  "displayName": "beyondCompareIntegration",
+  "description": "",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.83.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "beyondcompareintegration.launchBC",
+        "title": "Launch Beyond Compare",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "beyondcompareintegration.selectLeft",
+        "title": "Select Left File for Compare",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithLeft",
+        "title": "Compare to Left File",
+        "category": "Beyond Compare",
+        "enablement": "beyondcompareintegration.leftSelected"
+      },
+      {
+        "command": "beyondcompareintegration.selectLeftFolder",
+        "title": "Select Left Folder for Compare",
+        "catagory": "Beyond Compare"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithLeftFolder",
+        "title": "Compare to Left Folder",
+        "category": "Beyond Compare",
+        "enablement": "beyondcompareintegration.leftFolderSelected"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithFile",
+        "title": "Compare to File...",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithFolder",
+        "title": "Compare to Folder...",
+        "category": "Beyond Compare"
+      }
+    ],
+    "submenus": [
+      {
+        "id": "editorTitleContextCompare",
+        "label": "Compare"
+      },
+      {
+        "id": "explorerContextCompare",
+        "label": "Compare"
+      }
+    ],
+    "menus": {
+      "editor/title/context": [
+        {
+          "submenu": "editorTitleContextCompare",
+          "when": "resourceExtname == true"
+        }
+      ],
+      "editorTitleContextCompare": [
+        {
+          "command": "beyondcompareintegration.selectLeft",
+          "group": "LeftRight"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithLeft",
+          "group": "LeftRight"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithFile"
+        },
+        {
+          "command": "beyondcompareintegration.launchBC"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "explorerContextCompare"
+        }
+      ],
+      "explorerContextCompare": [
+        {
+          "command": "beyondcompareintegration.launchBC"
+        },
+        {
+          "command": "beyondcompareintegration.selectLeft",
+          "when": "resourceExtname == true",
+          "group": "LeftRight"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithLeft",
+          "when": "resourceExtname == true",
+          "group": "LeftRight"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithFile",
+          "when": "resourceExtname == true"
+        },
+        {
+          "command": "beyondcompareintegration.selectLeftFolder",
+          "when": "resourceExtname == false",
+          "group": "LeftRight"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithLeftFolder",
+          "when": "resourceExtname == false",
+          "group": "LeftRight"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithFolder",
+          "when": "resourceExtname == false"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "beyondcompareintegration.selectLeftFolder",
+          "when": "false"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithLeftFolder",
+          "when": "false"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithFolder",
+          "when": "false"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "beyondcompareintegration.launchBC",
+        "key": "alt+shift+b"
+      },
+      {
+        "command": "beyondcompareintegration.selectLeft",
+        "key": "alt+shift+[",
+        "when": "editorFocus"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithLeft",
+        "key": "alt+shift+]",
+        "when": "editorFocus"
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.83.0",
+    "@types/mocha": "^10.0.3",
+    "@types/node": "18.x",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "eslint": "^8.52.0",
+    "glob": "^10.3.10",
+    "mocha": "^10.2.0",
+    "typescript": "^5.2.2",
+    "@vscode/test-electron": "^2.3.6"
+  }
+}
