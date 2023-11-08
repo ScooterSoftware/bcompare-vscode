@@ -59,6 +59,22 @@
         "command": "beyondcompareintegration.compareWithSave",
         "title": "Compare with Saved Version",
         "category": "Beyond Compare"
+      },
+      {
+        "command": "beyondcompareintegration.selectLeftText",
+        "title": "Select highlighted text as left file",
+        "category": "Beyond Compare",
+        "enablement": "editorHasSelection"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithLeftText",
+        "title": "Compare highlighted text with left file",
+        "category": "Beyond Compare",
+        "enablement": "editorHasSelection && beyondcompareintegration.leftSelected"
+      },
+      {
+        "command": "beyondcompareintegration.test",
+        "title": "Test"
       }
     ],
     "submenus": [
@@ -143,6 +159,20 @@
           "when": "resourceExtname == true"
         }
       ],
+      "editor/context": [
+        {
+          "command": "beyondcompareintegration.selectLeftText"
+        },
+        {
+          "command": "beyondcompareintegration.compareWithLeftText"
+        }
+      ],
+      "scm/resourceState/context": [
+        {
+          "command": "beyondcompareintegration.test",
+          "when": "scmProvider == git"
+        }
+      ],
       "commandPalette": [
         {
           "command": "beyondcompareintegration.selectLeftFolder",
@@ -170,12 +200,22 @@
       {
         "command": "beyondcompareintegration.selectLeft",
         "key": "alt+shift+[",
-        "when": "editorFocus"
+        "when": "editorFocus && !editorHasSelection"
       },
       {
         "command": "beyondcompareintegration.compareWithLeft",
         "key": "alt+shift+]",
-        "when": "editorFocus"
+        "when": "editorFocus && !editorHasSelection"
+      },
+      {
+        "command": "beyondcompareintegration.selectLeftText",
+        "key": "alt+shift+[",
+        "when": "editorFocus && editorHasSelection"
+      },
+      {
+        "command": "beyondcompareintegration.compareWithLeftText",
+        "key": "alt+shift+]",
+        "when": "editorFocus && editorHasSelection"
       },
       {
         "command": "beyondcompareintegration.compareParent",
@@ -192,7 +232,17 @@
         "key": "alt+shift+s",
         "when": "editorFocus"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Beyond Compare",
+      "properties": {
+        "beyondcompareintegration.pathToBeyondCompare": {
+          "type": "string",
+          "default": "\"C:\\Program Files\\Beyond Compare 4\\BComp.exe\"",
+          "description": "The absolute path to Beyond Compare"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

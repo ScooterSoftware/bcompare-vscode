@@ -13,6 +13,7 @@ let temporaryFiles: string[] = [];
 export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
+	const BCLoadErrorMessage = "Error: Could not open Beyond Compare. Make sure you have the right path set in options";
 
 	console.log('Congratulations, your extension "beyondcompareintegration" is now active!');
 
@@ -112,14 +113,17 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(rightPath != "")
 		{
-			exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + leftPath + "\" \"" + rightPath + "\"", (error,strStdOut,strStdError) => 
+			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
 			{
-				if (error != null)
+				if(error != null)
 				{
-					vscode.window.showErrorMessage(strStdError);
-				}else
-				{
-					vscode.window.showInformationMessage(strStdOut);
+					if(error.code != undefined)
+					{
+						if (error.code >= 100 || stderr != '')
+						{
+							vscode.window.showErrorMessage(BCLoadErrorMessage);
+						}
+					}
 				}
 			});
 		}
@@ -158,16 +162,19 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(rightPath != "")
 		{
-			exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + leftPath + "\" \"" + rightPath + "\"", (error,strStdOut,strStdError) => 
-		{
-			if (error != null)
+			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
 			{
-				vscode.window.showErrorMessage(strStdError);
-			}else
-			{
-				vscode.window.showInformationMessage(strStdOut);
-			}
-		});
+				if(error != null)
+				{
+					if(error.code != undefined)
+					{
+						if (error.code >= 100 || stderr != '')
+						{
+							vscode.window.showErrorMessage(BCLoadErrorMessage);
+						}
+					}
+				}
+			});
 		}
 	});
 	context.subscriptions.push(compareWithLeftFolder);
@@ -190,7 +197,19 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + a.fsPath + "\" \"" + file[0].fsPath + "\"", (error,strStdOut,strStdError) => {});
+			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + a.fsPath + "\" \"" + file[0].fsPath + "\"", (error,stdout,stderr) => 
+			{
+				if(error != null)
+				{
+					if(error.code != undefined)
+					{
+						if (error.code >= 100 || stderr != '')
+						{
+							vscode.window.showErrorMessage(BCLoadErrorMessage);
+						}
+					}
+				}
+			});
 		});
 	});
 	context.subscriptions.push(compareWithFile);
@@ -213,7 +232,19 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + a.fsPath + "\" \"" + folder[0].fsPath + "\"", (error,strStdOut,strStdError) => {});
+			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + a.fsPath + "\" \"" + folder[0].fsPath + "\"", (error,stdout,stderr) => 
+			{
+				if(error != null)
+				{
+					if(error.code != undefined)
+					{
+						if (error.code >= 100 || stderr != '')
+						{
+							vscode.window.showErrorMessage(BCLoadErrorMessage);
+						}
+					}
+				}
+			});
 		});
 	});
 	context.subscriptions.push(compareWithFolder);
@@ -285,7 +316,19 @@ export function activate(context: vscode.ExtensionContext) {
 				folderPath += "\\" + splitPath[intI];
 			}
 
-			exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + folderPath + "\" \"" + folder[0].fsPath + "\"", (error,strStdOut,strStdError) => {});
+			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + folderPath + "\" \"" + folder[0].fsPath + "\"", (error,stdout,stderr) => 
+			{
+				if(error != null)
+				{
+					if(error.code != undefined)
+					{
+						if (error.code >= 100 || stderr != '')
+						{
+							vscode.window.showErrorMessage(BCLoadErrorMessage);
+						}
+					}
+				}
+			});
 		});
 	});
 	context.subscriptions.push(compareParentWithFolder);
@@ -379,8 +422,6 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			}
 		}
-
-
 	});
 	context.subscriptions.push(compareWithSave);
 
@@ -430,14 +471,84 @@ export function activate(context: vscode.ExtensionContext) {
 
 		fs.writeFileSync(filePath + "EDIT", textContent);
 
-		exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + filePath + "\" \"" + filePath + "EDIT" + "\"", (error,strStdOut,strStdError) => {});
+		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + filePath + "\" \"" + filePath + "EDIT" + "\"", (error,stdout,stderr) => 
+		{
+			if(error != null)
+			{
+				if(error.code != undefined)
+				{
+					if (error.code >= 100 || stderr != '')
+					{
+						vscode.window.showErrorMessage(BCLoadErrorMessage);
+					}
+				}
+			}
+		});
 
 		temporaryFiles.push(filePath + "EDIT");
 	}
 
+	let selectLeftText = vscode.commands.registerCommand('beyondcompareintegration.selectLeftText', () =>
+	{
+		if(vscode.window.activeTextEditor == undefined)
+		{
+			return;//This should be impossible, as this command requires an active text editor to be enabled
+		}
+
+		let selection = vscode.window.activeTextEditor.selection;
+		let selectedText = vscode.window.activeTextEditor.document.getText(selection)
+
+		fs.writeFileSync("./left.txt", selectedText);
+		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftSelected', true);
+		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftFolderSelected', false);
+		temporaryFiles.push("./left.txt");
+		leftPath = fs.realpathSync("./left.txt");
+		//let x = fs.readFileSync("./left.txt", {encoding: "utf8"});
+
+		//vscode.window.showInformationMessage(fs.realpathSync("./left.txt"));
+	});
+	context.subscriptions.push(selectLeftText);
+
+	let compareTextWithLeft = vscode.commands.registerCommand('beyondcompareintegration.compareWithLeftText', () =>
+	{
+		if(vscode.window.activeTextEditor == undefined)
+		{
+			return;//This should be impossible, as this command requires an active text editor to be enabled
+		}
+
+		let selection = vscode.window.activeTextEditor.selection;
+		let selectedText = vscode.window.activeTextEditor.document.getText(selection)
+
+		fs.writeFileSync("./right.txt", selectedText);
+		temporaryFiles.push("./right.txt");
+
+		let rightPath = fs.realpathSync("./right.txt");
+
+		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
+			{
+				if(error != null)
+				{
+					if(error.code != undefined)
+					{
+						if (error.code >= 100 || stderr != '')
+						{
+							vscode.window.showErrorMessage(BCLoadErrorMessage);
+						}
+					}
+				}
+			});
+	});
+	context.subscriptions.push(compareTextWithLeft);
+
+	let testCommand = vscode.commands.registerCommand('beyondcompareintegration.test', (a) => 
+	{
+		let x = 3;
+	});
+	context.subscriptions.push(testCommand);
+
 	let launchBC = vscode.commands.registerCommand('beyondcompareintegration.launchBC', () => 
 	{
-		exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe"', (error,strStdOut,strStdError) => 
+		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare, (error,strStdOut,strStdError) => 
 		{
 			if (error != null)
 			{
