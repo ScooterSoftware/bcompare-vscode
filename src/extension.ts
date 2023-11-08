@@ -1,7 +1,12 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { File } from 'buffer';
 import { exec } from 'child_process';
+import { ReadableStreamDefaultController } from 'stream/web';
 import * as vscode from 'vscode';
+import fs from 'fs';
+
+let temporaryFiles: string[] = [];
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -213,6 +218,223 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareWithFolder);
 
+	let compareParentWithFolder = vscode.commands.registerCommand('beyondcompareintegration.compareParent', (a) =>
+	{
+		
+		let success = false;
+		var fullPath: String;
+		if(a)
+		{
+			if(a.scheme == 'untitled')
+			{
+				//Error untitled
+				vscode.window.showErrorMessage("Error: Can not compare to the parent of \"" + a.fsPath + "\" until it is saved")
+			}else
+			{
+				fullPath = a.fsPath;
+				success = true;
+			}
+		}else
+		{
+			if(!vscode.window.activeTextEditor)
+			{
+				//Error no active text editor
+				vscode.window.showErrorMessage("Error: No active text editor found")
+			}else
+			{
+				if(vscode.window.activeTextEditor.document.isUntitled)
+				{
+					//Error untitled
+					vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved")
+				}else
+				{
+					fullPath = vscode.window.activeTextEditor.document.fileName;
+					success = true;
+				}
+			}
+		}
+
+		if(!success)
+		{
+			return;
+		}
+		
+		let options = 
+		{
+			canSelectFolders: true,
+			canSelectFiles: false,
+			openLabel: "Compare",
+			title: "Compare"
+		}
+
+		let promise = vscode.window.showOpenDialog(options);
+		promise.then((folder, path = fullPath) =>
+		{
+			if(folder == undefined)
+			{
+				return;
+			}
+
+			var splitPath;
+
+			splitPath = path.split("\\");
+			
+			let folderPath = splitPath[0];
+			for(let intI = 1; intI < splitPath.length - 1; intI++)
+			{
+				folderPath += "\\" + splitPath[intI];
+			}
+
+			exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + folderPath + "\" \"" + folder[0].fsPath + "\"", (error,strStdOut,strStdError) => {});
+		});
+	});
+	context.subscriptions.push(compareParentWithFolder);
+
+	let compareWithSave = vscode.commands.registerCommand('beyondcompareintegration.compareWithSave', async (a) =>
+	{
+		if(!a)//If not run by right clicking on an editor tab
+		{
+			if(!vscode.window.activeTextEditor)
+			{
+				vscode.window.showErrorMessage("Error: No active text editor");
+				return;
+			}else //but there is a text editor active
+			{
+				let fileName = vscode.window.activeTextEditor.document.fileName;
+				let splitPath = fileName.split('\\');
+				if(!fs.existsSync(fileName))
+				{
+					vscode.window.showErrorMessage("Error: \"" + splitPath[splitPath.length - 1] + "\" has no saved version to compare to");
+					return;
+				}else //and it has a saved version
+				{
+					if(!vscode.window.activeTextEditor.document.isDirty)//If it hasn't changed, ask for confirmation
+					{
+						vscode.window.showWarningMessage("\"" + splitPath[splitPath.length - 1] + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then((answer, path = fileName, document = vscode.window.activeTextEditor?.document) => 
+						{
+							if(answer === "Yes" && document != undefined)
+							{
+								compareWithSaveHelper(path, document);
+							}
+						});
+						return;
+					}
+					compareWithSaveHelper(fileName, vscode.window.activeTextEditor.document);//If it hasn't changed, compare
+				}
+			}
+		}else//If it is run by right clicking an editor tab
+		{
+			let splitPath = a.path.split('/');
+			if(!fs.existsSync(a.fsPath))
+			{
+				vscode.window.showErrorMessage("Error: \"" + splitPath[splitPath.length - 1] + "\" has no saved version to compare to");
+				return;
+			}else
+			{
+				let maxCounter = 0;
+				while(vscode.window.activeTextEditor == undefined && maxCounter < 100)//Look for a text editor to start
+				{
+					await vscode.commands.executeCommand("workbench.action.nextEditor");
+					maxCounter++;
+				}
+
+				if(vscode.window.activeTextEditor == undefined)//If one can't be found, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
+				{
+					vscode.window.showErrorMessage("Error: No open text editors found");
+					return;
+				}
+
+				let startingEditor = vscode.window.activeTextEditor.document.fileName;
+				var aEditor: vscode.TextDocument | undefined;
+				await vscode.commands.executeCommand("workbench.action.nextEditor");
+
+				while(vscode.window.activeTextEditor.document.fileName != startingEditor)//Loop through all editors to return to the starting one
+				{
+					await vscode.commands.executeCommand("workbench.action.nextEditor");
+					if(vscode.window.activeTextEditor.document.uri.fsPath == a.fsPath)//and look for the one that is opening "a"
+					{
+						aEditor = vscode.window.activeTextEditor.document;
+					}
+				}
+
+				if(aEditor == undefined)//If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
+				{
+					vscode.window.showErrorMessage("Error: couldn't find that file");
+					return;
+				}
+
+				if(aEditor.isDirty)
+				{
+					compareWithSaveHelper(a.fsPath, aEditor);
+				}else
+				{
+					vscode.window.showWarningMessage("\"" + splitPath[splitPath.length - 1] + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => 
+					{
+						if(answer === "Yes" && aEditor != undefined)
+						{
+							compareWithSaveHelper(a.fsPath, aEditor);
+						}
+					});
+					return;
+				}
+			}
+		}
+
+
+	});
+	context.subscriptions.push(compareWithSave);
+
+	function compareWithSaveHelper(filePath: string, editor: vscode.TextDocument)
+	{
+		let textContent = editor.getText();
+		//let allDocuments = vscode.workspace.textDocuments
+
+		// let maxCounter = 0;
+		// while(vscode.window.activeTextEditor == undefined && maxCounter < 100)//Look for a text editor to start
+		// {
+		// 	await vscode.commands.executeCommand("workbench.action.nextEditor");
+		// 	maxCounter++;
+		// }
+
+		// if(vscode.window.activeTextEditor == undefined)//If one can't be found, give up
+		// {
+		// 	return;
+		// }
+
+		// let startingEditor = vscode.window.activeTextEditor.document.fileName;
+		// await vscode.commands.executeCommand("workbench.action.nextEditor");
+
+		// while(vscode.window.activeTextEditor.document.fileName != startingEditor)
+		// {
+		// 	await vscode.commands.executeCommand("workbench.action.nextEditor");
+		// 	if(vscode.window.activeTextEditor.document.uri.fsPath == filePath)
+		// 	{
+		// 		textContent = vscode.window.activeTextEditor.document.getText();
+		// 	}
+		// }
+
+		// for(let intI = 0; intI < allDocuments.length; intI++)
+		// {
+		// 	if(allDocuments[intI].uri.fsPath == filePath)
+		// 	{
+		// 		textContent = allDocuments[intI].getText();
+		// 		break;
+		// 	}
+		// }
+
+		// if(textContent == "")
+		// {
+		// 	vscode.window.showErrorMessage("Error: could not find an open editor with that file");
+		// 	return;
+		// }
+
+		fs.writeFileSync(filePath + "EDIT", textContent);
+
+		exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe" \"' + filePath + "\" \"" + filePath + "EDIT" + "\"", (error,strStdOut,strStdError) => {});
+
+		temporaryFiles.push(filePath + "EDIT");
+	}
+
 	let launchBC = vscode.commands.registerCommand('beyondcompareintegration.launchBC', () => 
 	{
 		exec('"C:\\Program Files\\Beyond Compare 4\\BComp.exe"', (error,strStdOut,strStdError) => 
@@ -232,4 +454,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 // This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() 
+{
+	temporaryFiles.forEach((file) =>//Delete all temporary files created
+	{
+		fs.promises.unlink(file);
+	});
+}
