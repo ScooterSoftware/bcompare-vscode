@@ -12,6 +12,9 @@ let temporaryFiles: string[] = [];
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
 
+		const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git').exports;
+		const git = gitExtension.getAPI(1);
+
 	let leftPath = "";
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare. Make sure you have the right path set in options";
 
@@ -469,9 +472,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// 	return;
 		// }
 
-		fs.writeFileSync(filePath + "EDIT", textContent);
+		let splitPath = filePath.split('\\');
+		let editPath = "./" + splitPath[splitPath.length - 1] + "EDIT";
 
-		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + filePath + "\" \"" + filePath + "EDIT" + "\"", (error,stdout,stderr) => 
+		fs.writeFileSync(editPath, textContent);
+
+		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + filePath + "\" \"" + fs.realpathSync(editPath) + "\"", (error,stdout,stderr) => 
 		{
 			if(error != null)
 			{
@@ -485,7 +491,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		});
 
-		temporaryFiles.push(filePath + "EDIT");
+		temporaryFiles.push(editPath);
 	}
 
 	let selectLeftText = vscode.commands.registerCommand('beyondcompareintegration.selectLeftText', () =>
@@ -542,7 +548,27 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let testCommand = vscode.commands.registerCommand('beyondcompareintegration.test', (a) => 
 	{
-		let x = 3;
+		switch(a.type)
+		{
+			case 1:
+			case 7:
+				//Can't compare - no git version
+				vscode.window.showErrorMessage("Error: No version of that file found in the current branch");
+				break;
+			case 2:
+			case 6:
+				//Can't compare - no version on disk
+				vscode.window.showErrorMessage("Error: No version of that file found on the disk");
+				break;
+			case 5:
+				//Modified, compare to version on disk (and staged version if available?)
+				break;
+			case 0:
+				//Modified and staged, compare to verison on disk
+			default:
+				//Generic fail
+				vscode.window.showErrorMessage("Error: Unable to compare to that")
+		}
 	});
 	context.subscriptions.push(testCommand);
 
@@ -567,7 +593,7 @@ export function activate(context: vscode.ExtensionContext) {
 // This method is called when your extension is deactivated
 export function deactivate() 
 {
-	temporaryFiles.forEach((file) =>//Delete all temporary files created
+	temporaryFiles.forEach((file) =>//Delete all temporary files created by this extension
 	{
 		fs.promises.unlink(file);
 	});

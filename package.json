@@ -11,6 +11,9 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
+  "extensionDependencies": [
+    "vscode.git"
+  ],
   "contributes": {
     "commands": [
       {
@@ -80,11 +83,11 @@
     "submenus": [
       {
         "id": "editorTitleContextCompare",
-        "label": "Compare"
+        "label": "Beyond Compare"
       },
       {
         "id": "explorerContextCompare",
-        "label": "Compare"
+        "label": "Beyond Compare"
       }
     ],
     "menus": {
