@@ -547,8 +547,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let gitCompare = vscode.commands.registerCommand('beyondcompareintegration.gitCompare', async (a) => 
 	{
-		let aPath = a.resourceUri.fsPath;
-
 		switch(a.type)
 		{
 			case 1:
@@ -576,7 +574,7 @@ export function activate(context: vscode.ExtensionContext) {
 						let case5file3 = fs.realpathSync("./Staged");
 
 						exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" \"" + case5file3 + "\"", (error,stdout,stderr) => 
-						{
+						{//3 way compare outputs an error code 101. I don't know enough about how 3 way merges work to know if there actually is an error.
 							if(error != null)
 							{
 								if(error.code != undefined)

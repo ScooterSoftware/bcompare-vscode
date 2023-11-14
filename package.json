@@ -1,8 +1,15 @@
 {
   "name": "beyondcompareintegration",
   "displayName": "Beyond Compare Integration",
-  "description": "",
+  "description": "Open files in Beyond Compare directly from VSCode",
   "version": "0.0.1",
+  "publisher": "",
+  "author": "",
+  "keywords": [
+    "Beyondcompare",
+    "Beyond-compare",
+    "Compare"
+  ],
   "engines": {
     "vscode": "^1.83.0"
   },
@@ -11,9 +18,6 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
-  "extensionDependencies": [
-    "vscode.git"
-  ],
   "contributes": {
     "commands": [
       {
