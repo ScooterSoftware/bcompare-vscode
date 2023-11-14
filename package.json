@@ -76,8 +76,8 @@
         "enablement": "editorHasSelection && beyondcompareintegration.leftSelected"
       },
       {
-        "command": "beyondcompareintegration.test",
-        "title": "Test"
+        "command": "beyondcompareintegration.gitCompare",
+        "title": "Compare to git"
       }
     ],
     "submenus": [
@@ -172,7 +172,7 @@
       ],
       "scm/resourceState/context": [
         {
-          "command": "beyondcompareintegration.test",
+          "command": "beyondcompareintegration.gitCompare",
           "when": "scmProvider == git"
         }
       ],
@@ -192,6 +192,10 @@
         {
           "command": "beyondcompareintegration.compareWithSave",
           "when": "editorFocus"
+        },
+        {
+          "command": "beyondcompareintegration.gitCompare",
+          "when": "false"
         }
       ]
     },

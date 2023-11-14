@@ -5,15 +5,14 @@ import { exec } from 'child_process';
 import { ReadableStreamDefaultController } from 'stream/web';
 import * as vscode from 'vscode';
 import fs from 'fs';
+import { simpleGit, SimpleGit, CleanOptions } from 'simple-git';
+import * as path from 'path';
 
 let temporaryFiles: string[] = [];
 
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
-
-		const gitExtension = vscode.extensions.getExtension<GitExtension>('vscode.git').exports;
-		const git = gitExtension.getAPI(1);
 
 	let leftPath = "";
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare. Make sure you have the right path set in options";
@@ -531,23 +530,25 @@ export function activate(context: vscode.ExtensionContext) {
 		let rightPath = fs.realpathSync("./right.txt");
 
 		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
+		{
+			if(error != null)
 			{
-				if(error != null)
+				if(error.code != undefined)
 				{
-					if(error.code != undefined)
+					if (error.code >= 100 || stderr != '')
 					{
-						if (error.code >= 100 || stderr != '')
-						{
-							vscode.window.showErrorMessage(BCLoadErrorMessage);
-						}
+						vscode.window.showErrorMessage(BCLoadErrorMessage);
 					}
 				}
-			});
+			}
+		});
 	});
 	context.subscriptions.push(compareTextWithLeft);
 
-	let testCommand = vscode.commands.registerCommand('beyondcompareintegration.test', (a) => 
+	let gitCompare = vscode.commands.registerCommand('beyondcompareintegration.gitCompare', async (a) => 
 	{
+		let aPath = a.resourceUri.fsPath;
+
 		switch(a.type)
 		{
 			case 1:
@@ -561,16 +562,116 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage("Error: No version of that file found on the disk");
 				break;
 			case 5:
-				//Modified, compare to version on disk (and staged version if available?)
+				//Modified, compare to version on git (head) (and staged version if available?)
+
+				let case5stagedPresent = await gitCompareHelper(a.resourceUri.fsPath, ":./", "Staged");
+				let case5HeadPresent = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./", "Head");
+
+				if(fs.existsSync(a.resourceUri.fsPath) && case5HeadPresent)
+				{
+					let case5file1 = fs.realpathSync("./Head");
+
+					if(case5stagedPresent)//If there is a staged version to compare with, compare with it too
+					{
+						let case5file3 = fs.realpathSync("./Staged");
+
+						exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" \"" + case5file3 + "\"", (error,stdout,stderr) => 
+						{
+							if(error != null)
+							{
+								if(error.code != undefined)
+								{
+									if (error.code >= 100 || stderr != '')
+									{
+										vscode.window.showErrorMessage(BCLoadErrorMessage);
+									}
+								}
+							}
+						});
+					}else
+					{
+						exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\"", (error,stdout,stderr) => 
+						{
+							if(error != null)
+							{
+								if(error.code != undefined)
+								{
+									if (error.code >= 100 || stderr != '')
+									{
+										vscode.window.showErrorMessage(BCLoadErrorMessage);
+									}
+								}
+							}
+						});
+					}
+				}else
+				{
+					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+				}
 				break;
 			case 0:
-				//Modified and staged, compare to verison on disk
+				//Modified and staged, compare to verison on git (head)
+				let case0StagedPresent = await gitCompareHelper(a.resourceUri.fsPath, ":./", "Staged");
+				let case0HeadPresent = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./", "Head");
+
+				if(case0HeadPresent && case0StagedPresent)
+				{
+					let case0file1 = fs.realpathSync("./Staged");
+					let case0file2 = fs.realpathSync("./Head");
+
+					exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case0file1 + "\" \"" + case0file2 + "\"", (error,stdout,stderr) => 
+					{
+						if(error != null)
+						{
+							if(error.code != undefined)
+							{
+								if (error.code >= 100 || stderr != '')
+								{
+									vscode.window.showErrorMessage(BCLoadErrorMessage);
+								}
+							}
+						}
+					});
+				}else
+				{
+					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+				}
+				break;
 			default:
 				//Generic fail
 				vscode.window.showErrorMessage("Error: Unable to compare to that")
 		}
 	});
-	context.subscriptions.push(testCommand);
+	context.subscriptions.push(gitCompare);
+
+	async function gitCompareHelper(strPath: string, command: string, label: string) : Promise<boolean>
+	{
+		let directory = path.dirname(strPath);
+		let fileName = path.basename(strPath);
+		let fileContents = "";
+		let success = false;
+
+		await simpleGit(directory).outputHandler((_comand: any, standardOut: any) => 
+		{
+			standardOut.on('data', (data: any) =>
+			{
+				fileContents += data.toString('utf8');
+			});
+
+			standardOut.on('end', (data: any) =>
+			{
+				//Write fileContents to file and return true
+				fs.writeFileSync("./" + label, fileContents);
+				temporaryFiles.push("./" + label);
+				success = true;
+			});
+		}).raw(["show", command + fileName]).catch((_error) =>
+		{
+			success = false;
+		});
+
+		return success;
+	}
 
 	let launchBC = vscode.commands.registerCommand('beyondcompareintegration.launchBC', () => 
 	{
