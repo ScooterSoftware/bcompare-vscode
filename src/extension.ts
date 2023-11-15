@@ -339,6 +339,7 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		if(!a)//If not run by right clicking on an editor tab
 		{
+
 			if(!vscode.window.activeTextEditor)
 			{
 				vscode.window.showErrorMessage("Error: No active text editor");
@@ -376,6 +377,7 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}else
 			{
+				//There is no good way to get a list of all open tabs, so I have to cycle the user through all of them
 				let maxCounter = 0;
 				while(vscode.window.activeTextEditor == undefined && maxCounter < 100)//Look for a text editor to start
 				{
@@ -401,6 +403,7 @@ export function activate(context: vscode.ExtensionContext) {
 						aEditor = vscode.window.activeTextEditor.document;
 					}
 				}
+				
 
 				if(aEditor == undefined)//If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
 				{

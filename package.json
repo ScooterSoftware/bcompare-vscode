@@ -5,9 +5,11 @@
   "version": "0.0.1",
   "publisher": "",
   "author": "",
+  "icon": "",
   "keywords": [
     "Beyondcompare",
     "Beyond-compare",
+    "Beyond",
     "Compare"
   ],
   "engines": {
