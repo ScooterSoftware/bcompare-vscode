@@ -511,6 +511,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftFolderSelected', false);
 		temporaryFiles.push("./left.txt");
 		leftPath = fs.realpathSync("./left.txt");
+		vscode.window.showInformationMessage("Highlighted section selected as left text")
 		//let x = fs.readFileSync("./left.txt", {encoding: "utf8"});
 
 		//vscode.window.showInformationMessage(fs.realpathSync("./left.txt"));
@@ -565,32 +566,32 @@ export function activate(context: vscode.ExtensionContext) {
 			case 5:
 				//Modified, compare to version on git (head) (and staged version if available?)
 
-				let case5stagedPresent = await gitCompareHelper(a.resourceUri.fsPath, ":./", "Staged");
+				//let case5stagedPresent = await gitCompareHelper(a.resourceUri.fsPath, ":./", "Staged");
 				let case5HeadPresent = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./", "Head");
 
 				if(fs.existsSync(a.resourceUri.fsPath) && case5HeadPresent)
 				{
 					let case5file1 = fs.realpathSync("./Head");
 
-					if(case5stagedPresent)//If there is a staged version to compare with, compare with it too
-					{
-						let case5file3 = fs.realpathSync("./Staged");
+					//if(case5stagedPresent)//If there is a staged version to compare with, compare with it too
+					//{
+						// let case5file3 = fs.realpathSync("./Staged");
 
-						exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" \"" + case5file3 + "\"", (error,stdout,stderr) => 
-						{//3 way compare outputs an error code 101. I don't know enough about how 3 way merges work to know if there actually is an error.
-							if(error != null)
-							{
-								if(error.code != undefined)
-								{
-									if (error.code >= 100 || stderr != '')
-									{
-										vscode.window.showErrorMessage(BCLoadErrorMessage);
-									}
-								}
-							}
-						});
-					}else
-					{
+						// exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" \"" + case5file3 + "\"", (error,stdout,stderr) => 
+						// {//3 way compare outputs an error code 101. I don't know enough about how 3 way merges work to know if there actually is an error.
+						// 	if(error != null)
+						// 	{
+						// 		if(error.code != undefined)
+						// 		{
+						// 			if (error.code >= 100 || stderr != '')
+						// 			{
+						// 				vscode.window.showErrorMessage(BCLoadErrorMessage);
+						// 			}
+						// 		}
+						// 	}
+						// });
+					//}else
+					//{
 						exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\"", (error,stdout,stderr) => 
 						{
 							if(error != null)
@@ -604,7 +605,7 @@ export function activate(context: vscode.ExtensionContext) {
 								}
 							}
 						});
-					}
+					//}
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");

@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "",
   "author": "",
-  "icon": "",
+  "icon": "images/Logo.png",
   "keywords": [
     "Beyondcompare",
     "Beyond-compare",
@@ -83,7 +83,8 @@
       },
       {
         "command": "beyondcompareintegration.gitCompare",
-        "title": "Compare to git"
+        "title": "Compare to git",
+        "enablement": "scmProvider == git"
       }
     ],
     "submenus": [
