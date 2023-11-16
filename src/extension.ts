@@ -15,11 +15,13 @@ let temporaryFiles: string[] = [];
 export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
+	let blnLeftReadOnly = false;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare. Make sure you have the right path set in options";
+	const extensionName = "beyondcompareintegration"
 
 	console.log('Congratulations, your extension "beyondcompareintegration" is now active!');
 
-	let selectLeft = vscode.commands.registerCommand('beyondcompareintegration.selectLeft', (a) => 
+	let selectLeft = vscode.commands.registerCommand(extensionName + '.selectLeft', (a) => 
 	{
 		let success = false;
 		if(a)
@@ -63,15 +65,15 @@ export function activate(context: vscode.ExtensionContext) {
 		
 		if(success)
 		{
-			let splitName = leftPath.split("\\");
-			vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftSelected', true);
-			vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftFolderSelected', false);
-			vscode.window.showInformationMessage("Marked \"" + splitName[splitName.length - 1] + "\" as left file");
+			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
+			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
+			blnLeftReadOnly = false;
+			vscode.window.showInformationMessage("Marked \"" + path.basename(leftPath) + "\" as left file");
 		}
 	});
 	context.subscriptions.push(selectLeft);
 
-	let compareWithLeft = vscode.commands.registerCommand('beyondcompareintegration.compareWithLeft', (b) =>
+	let compareWithLeft = vscode.commands.registerCommand(extensionName + '.compareWithLeft', (b) =>
 	{
 		//Note: it is not possible to make this command's title "compare with [leftItemName]" as dynamic command titles are not a thing, and the developers of visual studio seem to think they have no use
 
@@ -115,7 +117,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(rightPath != "")
 		{
-			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
+			let option = "";
+			if(blnLeftReadOnly)
+			{
+				option = "/lro";
+			}
+			exec(bcPath() + " \"" + leftPath + "\" \"" + rightPath + "\" " + option, (error,stdout,stderr) => 
 			{
 				if(error != null)
 				{
@@ -132,7 +139,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareWithLeft);
 
-	let selectLeftFolder = vscode.commands.registerCommand('beyondcompareintegration.selectLeftFolder', (a) => 
+	let selectLeftFolder = vscode.commands.registerCommand(extensionName + '.selectLeftFolder', (a) => 
 	{
 		if(a)
 		{
@@ -144,13 +151,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		let splitName = leftPath.split("\\");
-		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftSelected', false);
-		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftFolderSelected', true);
+		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
+		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', true);
 		vscode.window.showInformationMessage("Marked \"" + splitName[splitName.length - 1] + "\" as left folder");
 	});
 	context.subscriptions.push(selectLeftFolder);
 
-	let compareWithLeftFolder = vscode.commands.registerCommand('beyondcompareintegration.compareWithLeftFolder', (b) =>
+	let compareWithLeftFolder = vscode.commands.registerCommand(extensionName + '.compareWithLeftFolder', (b) =>
 	{
 		let rightPath = "";
 		if(b)
@@ -164,7 +171,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(rightPath != "")
 		{
-			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
+			exec(bcPath() + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
 			{
 				if(error != null)
 				{
@@ -181,7 +188,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareWithLeftFolder);
 
-	let compareWithFile = vscode.commands.registerCommand('beyondcompareintegration.compareWithFile', (a) =>
+	let compareWithFile = vscode.commands.registerCommand(extensionName + '.compareWithFile', (a) =>
 	{
 		let options = 
 		{
@@ -199,7 +206,7 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + a.fsPath + "\" \"" + file[0].fsPath + "\"", (error,stdout,stderr) => 
+			exec(bcPath() + " \"" + a.fsPath + "\" \"" + file[0].fsPath + "\"", (error,stdout,stderr) => 
 			{
 				if(error != null)
 				{
@@ -216,7 +223,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareWithFile);
 
-	let compareWithFolder = vscode.commands.registerCommand('beyondcompareintegration.compareWithFolder', (a) =>
+	let compareWithFolder = vscode.commands.registerCommand(extensionName + '.compareWithFolder', (a) =>
 	{
 		let options = 
 		{
@@ -234,7 +241,7 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
-			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + a.fsPath + "\" \"" + folder[0].fsPath + "\"", (error,stdout,stderr) => 
+			exec(bcPath() + " \"" + a.fsPath + "\" \"" + folder[0].fsPath + "\"", (error,stdout,stderr) => 
 			{
 				if(error != null)
 				{
@@ -251,7 +258,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareWithFolder);
 
-	let compareParentWithFolder = vscode.commands.registerCommand('beyondcompareintegration.compareParent', (a) =>
+	let compareParentWithFolder = vscode.commands.registerCommand(extensionName + '.compareParent', (a) =>
 	{
 		
 		let success = false;
@@ -318,7 +325,7 @@ export function activate(context: vscode.ExtensionContext) {
 				folderPath += "\\" + splitPath[intI];
 			}
 
-			exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + folderPath + "\" \"" + folder[0].fsPath + "\"", (error,stdout,stderr) => 
+			exec(bcPath() + " \"" + folderPath + "\" \"" + folder[0].fsPath + "\"", (error,stdout,stderr) => 
 			{
 				if(error != null)
 				{
@@ -335,7 +342,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareParentWithFolder);
 
-	let compareWithSave = vscode.commands.registerCommand('beyondcompareintegration.compareWithSave', async (a) =>
+	let compareWithSave = vscode.commands.registerCommand(extensionName + '.compareWithSave', async (a) =>
 	{
 		if(!a)//If not run by right clicking on an editor tab
 		{
@@ -356,11 +363,11 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					if(!vscode.window.activeTextEditor.document.isDirty)//If it hasn't changed, ask for confirmation
 					{
-						vscode.window.showWarningMessage("\"" + splitPath[splitPath.length - 1] + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then((answer, path = fileName, document = vscode.window.activeTextEditor?.document) => 
+						vscode.window.showWarningMessage("\"" + splitPath[splitPath.length - 1] + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then((answer, docPath = fileName, document = vscode.window.activeTextEditor?.document) => 
 						{
 							if(answer === "Yes" && document != undefined)
 							{
-								compareWithSaveHelper(path, document);
+								compareWithSaveHelper(docPath, document);
 							}
 						});
 						return;
@@ -370,10 +377,9 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 		}else//If it is run by right clicking an editor tab
 		{
-			let splitPath = a.path.split('/');
 			if(!fs.existsSync(a.fsPath))
 			{
-				vscode.window.showErrorMessage("Error: \"" + splitPath[splitPath.length - 1] + "\" has no saved version to compare to");
+				vscode.window.showErrorMessage("Error: \"" + path.basename(a.path) + "\" has no saved version to compare to");
 				return;
 			}else
 			{
@@ -416,7 +422,7 @@ export function activate(context: vscode.ExtensionContext) {
 					compareWithSaveHelper(a.fsPath, aEditor);
 				}else
 				{
-					vscode.window.showWarningMessage("\"" + splitPath[splitPath.length - 1] + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => 
+					vscode.window.showWarningMessage("\"" + path.basename(a.path) + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => 
 					{
 						if(answer === "Yes" && aEditor != undefined)
 						{
@@ -474,12 +480,12 @@ export function activate(context: vscode.ExtensionContext) {
 		// 	return;
 		// }
 
-		let splitPath = filePath.split('\\');
-		let editPath = "./" + splitPath[splitPath.length - 1] + "EDIT";
+		let time = Date.now();
+		let editPath = "./" + "EDIT" + time + path.basename(filePath);
 
 		fs.writeFileSync(editPath, textContent);
 
-		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + filePath + "\" \"" + fs.realpathSync(editPath) + "\"", (error,stdout,stderr) => 
+		exec(bcPath() + " \"" + filePath + "\" \"" + fs.realpathSync(editPath) + "\" /rro", (error,stdout,stderr) => 
 		{
 			if(error != null)
 			{
@@ -496,7 +502,7 @@ export function activate(context: vscode.ExtensionContext) {
 		temporaryFiles.push(editPath);
 	}
 
-	let selectLeftText = vscode.commands.registerCommand('beyondcompareintegration.selectLeftText', () =>
+	let selectLeftText = vscode.commands.registerCommand(extensionName + '.selectLeftText', () =>
 	{
 		if(vscode.window.activeTextEditor == undefined)
 		{
@@ -505,20 +511,23 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection)
+		let time = Date.now();
+		let newPath = "./left" + time + ".txt";
 
-		fs.writeFileSync("./left.txt", selectedText);
-		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftSelected', true);
-		vscode.commands.executeCommand('setContext', 'beyondcompareintegration.leftFolderSelected', false);
-		temporaryFiles.push("./left.txt");
-		leftPath = fs.realpathSync("./left.txt");
-		vscode.window.showInformationMessage("Highlighted section selected as left text")
+		fs.writeFileSync(newPath, selectedText);
+		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
+		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
+		temporaryFiles.push(newPath);
+		leftPath = fs.realpathSync(newPath);
+		blnLeftReadOnly = true;
+		vscode.window.showInformationMessage("Highlighted section selected as left file")
 		//let x = fs.readFileSync("./left.txt", {encoding: "utf8"});
 
 		//vscode.window.showInformationMessage(fs.realpathSync("./left.txt"));
 	});
 	context.subscriptions.push(selectLeftText);
 
-	let compareTextWithLeft = vscode.commands.registerCommand('beyondcompareintegration.compareWithLeftText', () =>
+	let compareTextWithLeft = vscode.commands.registerCommand(extensionName + '.compareWithLeftText', () =>
 	{
 		if(vscode.window.activeTextEditor == undefined)
 		{
@@ -527,13 +536,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection)
+		let time = Date.now();
+		let newPath = "./right" + time + ".txt";
 
-		fs.writeFileSync("./right.txt", selectedText);
-		temporaryFiles.push("./right.txt");
+		fs.writeFileSync(newPath, selectedText);
+		temporaryFiles.push(newPath);
 
-		let rightPath = fs.realpathSync("./right.txt");
+		let rightPath = fs.realpathSync(newPath);
 
-		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + leftPath + "\" \"" + rightPath + "\"", (error,stdout,stderr) => 
+		let options = "/rro";
+		if(blnLeftReadOnly)
+		{
+			options += " /lro";
+		}
+
+		exec(bcPath() + " \"" + leftPath + "\" \"" + rightPath + "\" " + options, (error,stdout,stderr) => 
 		{
 			if(error != null)
 			{
@@ -549,7 +566,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(compareTextWithLeft);
 
-	let gitCompare = vscode.commands.registerCommand('beyondcompareintegration.gitCompare', async (a) => 
+	let gitCompare = vscode.commands.registerCommand(extensionName + '.gitCompare', async (a) => 
 	{
 		switch(a.type)
 		{
@@ -577,7 +594,7 @@ export function activate(context: vscode.ExtensionContext) {
 					//{
 						// let case5file3 = fs.realpathSync("./Staged");
 
-						// exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" \"" + case5file3 + "\"", (error,stdout,stderr) => 
+						// exec(bcPath() + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" \"" + case5file3 + "\"", (error,stdout,stderr) => 
 						// {//3 way compare outputs an error code 101. I don't know enough about how 3 way merges work to know if there actually is an error.
 						// 	if(error != null)
 						// 	{
@@ -592,7 +609,7 @@ export function activate(context: vscode.ExtensionContext) {
 						// });
 					//}else
 					//{
-						exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\"", (error,stdout,stderr) => 
+						exec(bcPath() + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" /lro", (error,stdout,stderr) => 
 						{
 							if(error != null)
 							{
@@ -621,7 +638,7 @@ export function activate(context: vscode.ExtensionContext) {
 					let case0file1 = fs.realpathSync("./Staged");
 					let case0file2 = fs.realpathSync("./Head");
 
-					exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare + " \"" + case0file1 + "\" \"" + case0file2 + "\"", (error,stdout,stderr) => 
+					exec(bcPath() + " \"" + case0file1 + "\" \"" + case0file2 + "\" /ro", (error,stdout,stderr) => 
 					{
 						if(error != null)
 						{
@@ -663,8 +680,11 @@ export function activate(context: vscode.ExtensionContext) {
 			standardOut.on('end', (data: any) =>
 			{
 				//Write fileContents to file and return true
-				fs.writeFileSync("./" + label, fileContents);
-				temporaryFiles.push("./" + label);
+				let ext = path.extname(strPath);
+				let time = Date.now();
+				let newPath = "./" + label + time + ext;
+				fs.writeFileSync(newPath, fileContents);
+				temporaryFiles.push(newPath);
 				success = true;
 			});
 		}).raw(["show", command + fileName]).catch((_error) =>
@@ -675,9 +695,9 @@ export function activate(context: vscode.ExtensionContext) {
 		return success;
 	}
 
-	let launchBC = vscode.commands.registerCommand('beyondcompareintegration.launchBC', () => 
+	let launchBC = vscode.commands.registerCommand(extensionName + '.launchBC', () => 
 	{
-		exec(vscode.workspace.getConfiguration('beyondcompareintegration').pathToBeyondCompare, (error,strStdOut,strStdError) => 
+		exec(bcPath(), (error,strStdOut,strStdError) => 
 		{
 			if (error != null)
 			{
@@ -689,6 +709,11 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 	});
 	context.subscriptions.push(launchBC);
+
+	function bcPath() : string
+	{
+		return vscode.workspace.getConfiguration(extensionName).pathToBeyondCompare;
+	}
 
 }
 

@@ -58,9 +58,9 @@ Beyond Compare must be installed on your computer.
 
 This extension assumes that Beyond Compare 4 is installed in the default location. If you have a different version installed or have it installed in a different location, update the path to Beyond Compare in settings. (`File` > `Preferences` > `Settings`)
 
-## Known Issues
+<!-- ## Known Issues
 
-Calling out known issues can help limit users opening duplicate issues against your extension.
+Calling out known issues can help limit users opening duplicate issues against your extension. -->
 
 <!-- ## Release Notes
 
