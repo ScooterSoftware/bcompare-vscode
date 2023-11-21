@@ -54,9 +54,9 @@ Use this option to compare staged or unstaged changes to the last commit in the 
 
 Beyond Compare must be installed on your computer.
 
-## Extension Settings
+<!-- ## Extension Settings -->
 
-This extension assumes that Beyond Compare 4 is installed in the default location. If you have a different version installed or have it installed in a different location, update the path to Beyond Compare in settings. (`File` > `Preferences` > `Settings`)
+
 
 <!-- ## Known Issues
 

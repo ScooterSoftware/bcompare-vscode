@@ -246,17 +246,7 @@
         "key": "alt+shift+s",
         "when": "editorFocus"
       }
-    ],
-    "configuration": {
-      "title": "Beyond Compare",
-      "properties": {
-        "beyondcompareintegration.pathToBeyondCompare": {
-          "type": "string",
-          "default": "\"C:\\Program Files\\Beyond Compare 4\\BComp.exe\"",
-          "description": "The absolute path to Beyond Compare"
-        }
-      }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -267,15 +257,18 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/vscode": "^1.83.0",
     "@types/mocha": "^10.0.3",
     "@types/node": "18.x",
+    "@types/vscode": "^1.83.0",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
+    "@vscode/test-electron": "^2.3.6",
     "eslint": "^8.52.0",
     "glob": "^10.3.10",
     "mocha": "^10.2.0",
-    "typescript": "^5.2.2",
-    "@vscode/test-electron": "^2.3.6"
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@vscode/windows-registry": "^1.1.0"
   }
 }

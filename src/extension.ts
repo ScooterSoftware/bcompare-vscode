@@ -16,7 +16,39 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
 	let blnLeftReadOnly = false;
-	const BCLoadErrorMessage = "Error: Could not open Beyond Compare. Make sure you have the right path set in options";
+	var vsWinReg = require('@vscode/windows-registry');
+	var os = require('node:os');
+	//console.log(vsWinReg.GetStringRegKey('HKEY_LOCAL_MACHINE', 'SOFTWARE\\Microsoft\\Windows\\CurrentVersion', 'ProgramFilesPath'));
+	
+	//let supportsMerge = vsWinReg.GetStringRegKey('HKEY_CURRENT_USER', 'SOFTWARE\\Scooter Software\\Beyond Compare', 'SupportsMerge');
+
+	let BCPath = '';
+	let topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
+	let versionNumbers = ['', ' 5', ' 4',' 3'];
+	let bcInPath = false;
+
+	if(os.platform() == 'win32')
+	{
+		for(var folder in topFolders)
+		{
+			for(var version in versionNumbers)
+			{
+				if(BCPath == '')
+				{
+					BCPath = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'ExePath');
+				}
+			}
+		}
+	}
+
+	if(BCPath == '')
+	{
+		//Error - couldn't find path to BC
+		//throw("Couln't find path to Beyond Compare in windows registry");
+		bcInPath = true;//Assume it's in %PATH%
+	}
+
+	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
 	const extensionName = "beyondcompareintegration"
 
 	console.log('Congratulations, your extension "beyondcompareintegration" is now active!');
@@ -712,7 +744,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function bcPath() : string
 	{
-		return vscode.workspace.getConfiguration(extensionName).pathToBeyondCompare;
+		if(bcInPath)
+		{
+			return "BComp";
+		}else
+		{
+			return "\"" + BCPath + "\"";
+		}
 	}
 
 }
