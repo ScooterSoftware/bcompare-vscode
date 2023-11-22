@@ -5,7 +5,7 @@
   "version": "0.0.1",
   "publisher": "",
   "author": "",
-  "icon": "images/Logo.png",
+  "icon": "./images/Logo.png",
   "keywords": [
     "Beyondcompare",
     "Beyond-compare",
@@ -71,20 +71,36 @@
       },
       {
         "command": "beyondcompareintegration.selectLeftText",
-        "title": "Select highlighted text as left file",
+        "title": "Select Highlighted Text as Left File",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection"
       },
       {
         "command": "beyondcompareintegration.compareWithLeftText",
-        "title": "Compare highlighted text with left file",
+        "title": "Compare Highlighted Text with Left File",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection && beyondcompareintegration.leftSelected"
       },
       {
         "command": "beyondcompareintegration.gitCompare",
-        "title": "Compare to git",
+        "title": "Compare to Head",
         "enablement": "scmProvider == git"
+      },
+      {
+        "command": "beyondcompareintegration.openFromDiff",
+        "title": "Open diff in Beyond Compare",
+        "enablement": "isInDiffEditor || true",
+        "category": "Beyond Compare",
+        "icon": {
+          "light": "./images/VSCode_BCLogo_Mono_Light.svg",
+          "dark": "./images/VSCode_BCLogo_Mono_Dark.svg"
+        }
+      },
+      {
+        "command": "beyondcompareintegration.compareTwoSelected",
+        "title": "Compare Selected Files",
+        "enablement": "listMultiSelection === true",
+        "category": "Beyond Compare"
       }
     ],
     "submenus": [
@@ -125,11 +141,23 @@
         {
           "command": "beyondcompareintegration.compareWithSave",
           "when": "isFileSystemResource"
+        },
+        {
+          "command": "beyondcompareintegration.openFromDiff"
         }
       ],
       "explorer/context": [
         {
-          "submenu": "explorerContextCompare"
+          "submenu": "explorerContextCompare",
+          "when": "listMultiSelection === false"
+        },
+        {
+          "command": "beyondcompareintegration.compareTwoSelected",
+          "when": "listMultiSelection === true"
+        },
+        {
+          "command": "beyondcompareintegration.launchBC",
+          "when": "listMultiSelection === true"
         }
       ],
       "explorerContextCompare": [
@@ -138,35 +166,35 @@
         },
         {
           "command": "beyondcompareintegration.selectLeft",
-          "when": "resourceExtname == true",
+          "when": "explorerResourceIsFolder === false",
           "group": "LeftRight"
         },
         {
           "command": "beyondcompareintegration.compareWithLeft",
-          "when": "resourceExtname == true",
+          "when": "explorerResourceIsFolder === false",
           "group": "LeftRight"
         },
         {
           "command": "beyondcompareintegration.compareWithFile",
-          "when": "resourceExtname == true"
+          "when": "explorerResourceIsFolder === false"
         },
         {
           "command": "beyondcompareintegration.selectLeftFolder",
-          "when": "resourceExtname == false",
+          "when": "explorerResourceIsFolder",
           "group": "LeftRight"
         },
         {
           "command": "beyondcompareintegration.compareWithLeftFolder",
-          "when": "resourceExtname == false",
+          "when": "explorerResourceIsFolder",
           "group": "LeftRight"
         },
         {
           "command": "beyondcompareintegration.compareWithFolder",
-          "when": "resourceExtname == false"
+          "when": "explorerResourceIsFolder"
         },
         {
           "command": "beyondcompareintegration.compareParent",
-          "when": "resourceExtname == true"
+          "when": "explorerResourceIsFolder === false"
         }
       ],
       "editor/context": [
@@ -181,6 +209,13 @@
         {
           "command": "beyondcompareintegration.gitCompare",
           "when": "scmProvider == git"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "beyondcompareintegration.openFromDiff",
+          "when": "isInDiffEditor",
+          "group": "navigation"
         }
       ],
       "commandPalette": [
