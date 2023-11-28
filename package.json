@@ -89,7 +89,7 @@
       {
         "command": "beyondcompareintegration.openFromDiff",
         "title": "Open diff in Beyond Compare",
-        "enablement": "isInDiffEditor || true",
+        "enablement": "isInDiffEditor",
         "category": "Beyond Compare",
         "icon": {
           "light": "./images/VSCode_BCLogo_Mono_Light.svg",
@@ -141,9 +141,6 @@
         {
           "command": "beyondcompareintegration.compareWithSave",
           "when": "isFileSystemResource"
-        },
-        {
-          "command": "beyondcompareintegration.openFromDiff"
         }
       ],
       "explorer/context": [
@@ -274,12 +271,22 @@
       {
         "command": "beyondcompareintegration.compareWithFile",
         "key": "alt+shift+5",
-        "when": "editorFocus"
+        "when": "editorFocus && !isInDiffEditor"
+      },
+      {
+        "command": "beyondcompareintegration.openFromDiff",
+        "key": "alt+shift+5",
+        "when": "!filesExplorerFocus && isInDiffEditor"
       },
       {
         "command": "beyondcompareintegration.compareWithSave",
         "key": "alt+shift+s",
         "when": "editorFocus"
+      },
+      {
+        "command": "beyondcompareintegration.compareTwoSelected",
+        "key": "alt+shift+5",
+        "when": "filesExplorerFocus && listMultiSelection"
       }
     ]
   },

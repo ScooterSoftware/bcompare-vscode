@@ -26,8 +26,10 @@ export function activate(context: vscode.ExtensionContext) {
 	let topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
 	let versionNumbers = ['', ' 5', ' 4',' 3'];
 	let bcInPath = false;
+	const strOS = os.platform();
+	var threeWayCompareAllowed: boolean | string = false;
 
-	if(os.platform() === 'win32')
+	if(strOS === 'win32')
 	{
 		for(var folder in topFolders)
 		{
@@ -35,7 +37,23 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				if(BCPath === '')
 				{
-					BCPath = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'ExePath');
+					try
+					{
+						BCPath = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'ExePath');
+						// threeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'SupportsMerge') as boolean;
+						threeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare 5\\BcShellEx', 'Disabled') as boolean;
+
+						if(threeWayCompareAllowed === "")//Note: Dispite the error message, APPARENTLY booleans CAN be empty strings. WHO KNEW!?
+						{
+							threeWayCompareAllowed = false;
+						}else
+						{
+							threeWayCompareAllowed = true;
+						}
+					}catch
+					{
+						threeWayCompareAllowed = false;
+					}
 				}
 			}
 		}
@@ -43,8 +61,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	if(BCPath === '')
 	{
-		//Error - couldn't find path to BC
-		//throw("Couln't find path to Beyond Compare in windows registry");
 		bcInPath = true;//Assume it's in %PATH% 
 	}
 
@@ -643,8 +659,23 @@ export function activate(context: vscode.ExtensionContext) {
 				//Error: Can't compare files to directories
 				vscode.window.showErrorMessage("Error: Can't compare files to directories");
 			}
-		}else{
-			//TODO: comparisons for 3 or 4 files/folders
+		}else if(a[1].length === 3 && threeWayCompareAllowed){
+			let fileLeft = a[1][0].fsPath;
+			let fileRight = a[1][2].fsPath;
+			let fileCenter = a[1][1].fsPath;
+
+			if(fs.statSync(fileLeft).isFile === fs.statSync(fileRight).isFile && fs.statSync(fileLeft).isFile === fs.statSync(fileCenter).isFile)
+			{
+				openBC(bcPath() + " \"" + fileLeft + "\" \"" + fileRight + "\" \"" + fileCenter + "\"");
+			}else
+			{
+				//Error: Can't compare files to directories
+				vscode.window.showErrorMessage("Error: Can't compare files to directories");
+			}
+		}else
+		{
+			//Error: to many for compare
+			vscode.window.showErrorMessage("Error: Can't compare that many things");
 		}
 	});
 	context.subscriptions.push(compareTwoSelected);
