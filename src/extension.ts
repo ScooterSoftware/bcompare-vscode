@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let versionNumbers = ['', ' 5', ' 4',' 3'];
 	let bcInPath = false;
 	const strOS = os.platform();
-	var threeWayCompareAllowed: boolean | string = false;
+	var threeWayCompareAllowed: boolean = false;
 
 	if(strOS === 'win32')
 	{
@@ -40,10 +40,10 @@ export function activate(context: vscode.ExtensionContext) {
 					try
 					{
 						BCPath = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'ExePath');
-						// threeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'SupportsMerge') as boolean;
-						threeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare 5\\BcShellEx', 'Disabled') as boolean;
+						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'SupportsMerge');
+						// strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare 5\\BcShellEx', 'Disabled') as boolean;
 
-						if(threeWayCompareAllowed === "")//Note: Dispite the error message, APPARENTLY booleans CAN be empty strings. WHO KNEW!?
+						if(strThreeWayCompareAllowed === "")
 						{
 							threeWayCompareAllowed = false;
 						}else
@@ -643,7 +643,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(openFromDiff);
 
-	let compareTwoSelected = vscode.commands.registerCommand(extensionName + '.compareTwoSelected', (...a) =>
+	let compareSelected = vscode.commands.registerCommand(extensionName + '.compareSelected', (...a) =>
 	{
 		if(a[1].length === 2)
 		{
@@ -678,7 +678,7 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage("Error: Can't compare that many things");
 		}
 	});
-	context.subscriptions.push(compareTwoSelected);
+	context.subscriptions.push(compareSelected);
 
 	let launchBC = vscode.commands.registerCommand(extensionName + '.launchBC', () => 
 	{
@@ -705,7 +705,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				if(error.code !== undefined)
 				{
-					if (error.code >= 100 || stderr !== '')
+					if ((error.code >= 100 && error.code !== 101) || stderr !== '')
 					{
 						vscode.window.showErrorMessage(BCLoadErrorMessage);
 					}

@@ -97,7 +97,7 @@
         }
       },
       {
-        "command": "beyondcompareintegration.compareTwoSelected",
+        "command": "beyondcompareintegration.compareSelected",
         "title": "Compare Selected Files",
         "enablement": "listMultiSelection === true",
         "category": "Beyond Compare"
@@ -149,7 +149,7 @@
           "when": "listMultiSelection === false"
         },
         {
-          "command": "beyondcompareintegration.compareTwoSelected",
+          "command": "beyondcompareintegration.compareSelected",
           "when": "listMultiSelection === true"
         },
         {
@@ -284,7 +284,7 @@
         "when": "editorFocus"
       },
       {
-        "command": "beyondcompareintegration.compareTwoSelected",
+        "command": "beyondcompareintegration.compareSelected",
         "key": "alt+shift+5",
         "when": "filesExplorerFocus && listMultiSelection"
       }
