@@ -3,7 +3,7 @@
   "displayName": "Beyond Compare Integration",
   "description": "Open files in Beyond Compare directly from VSCode",
   "version": "0.0.1",
-  "publisher": "",
+  "publisher": "Scooter Software",
   "author": "",
   "icon": "./images/Logo.png",
   "keywords": [
@@ -83,12 +83,12 @@
       },
       {
         "command": "beyondcompareintegration.gitCompare",
-        "title": "Compare to Head",
+        "title": "Compare to Head with BC",
         "enablement": "scmProvider == git"
       },
       {
         "command": "beyondcompareintegration.openFromDiff",
-        "title": "Open diff in Beyond Compare",
+        "title": "Open Diff in Beyond Compare",
         "enablement": "isInDiffEditor",
         "category": "Beyond Compare",
         "icon": {

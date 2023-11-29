@@ -7,6 +7,8 @@ import * as vscode from 'vscode';
 import fs, { open } from 'fs';
 import { simpleGit, SimpleGit, CleanOptions } from 'simple-git';
 import * as path from 'path';
+import * as vsWinReg from '@vscode/windows-registry';
+import * as os from 'node:os';
 
 let temporaryFiles: string[] = [];
 
@@ -16,52 +18,48 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
 	let blnLeftReadOnly = false;
-	var vsWinReg = require('@vscode/windows-registry');
-	var os = require('node:os');
 	//console.log(vsWinReg.GetStringRegKey('HKEY_LOCAL_MACHINE', 'SOFTWARE\\Microsoft\\Windows\\CurrentVersion', 'ProgramFilesPath'));
 	
 	//let supportsMerge = vsWinReg.GetStringRegKey('HKEY_CURRENT_USER', 'SOFTWARE\\Scooter Software\\Beyond Compare', 'SupportsMerge');
 
-	let BCPath = '';
-	let topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
-	let versionNumbers = ['', ' 5', ' 4',' 3'];
-	let bcInPath = false;
+	let BCPath: string | undefined = 'bcomp';
 	const strOS = os.platform();
 	var threeWayCompareAllowed: boolean = false;
 
 	if(strOS === 'win32')
 	{
+		let topFolders: any[] = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
+		let versionNumbers = ['', ' 5', ' 4',' 3'];
 		for(var folder in topFolders)
 		{
+			if(BCPath !== 'bcomp')
+			{
+				break;
+			}
 			for(var version in versionNumbers)
 			{
-				if(BCPath === '')
+				if(BCPath === 'bcomp')
 				{
 					try
 					{
-						BCPath = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'ExePath');
-						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare' + versionNumbers[version], 'SupportsMerge');
-						// strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], 'SOFTWARE\\Scooter Software\\Beyond Compare 5\\BcShellEx', 'Disabled') as boolean;
-
-						if(strThreeWayCompareAllowed === "")
+						const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
+						BCPath = vsWinReg.GetStringRegKey(topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
+						if(BCPath === undefined)
 						{
-							threeWayCompareAllowed = false;
-						}else
-						{
-							threeWayCompareAllowed = true;
+							BCPath = 'bcomp';
 						}
+						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
+						threeWayCompareAllowed = strThreeWayCompareAllowed !== "";
 					}catch
 					{
 						threeWayCompareAllowed = false;
 					}
+				}else
+				{
+					break;
 				}
 			}
 		}
-	}
-
-	if(BCPath === '')
-	{
-		bcInPath = true;//Assume it's in %PATH% 
 	}
 
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
@@ -78,37 +76,28 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				//Error untitled
 				vscode.window.showErrorMessage("Error: Can not compare to " + a.fsPath + " until it is saved");
+			}else if(a.scheme !== "file")
+			{
+				//Error not a file
+				vscode.window.showErrorMessage("Error: Can not compare that");
 			}else
 			{
-				if(a.scheme !== "file")
-				{
-					//Error not a file
-					vscode.window.showErrorMessage("Error: Can not compare that");
-				}else
-				{
-					leftPath = a.fsPath;
-					success = true;
-				}
+				leftPath = a.fsPath;
+				success = true;
 			}
 			
+		}else if(!vscode.window.activeTextEditor)
+		{
+			//Error no active text editor
+			vscode.window.showErrorMessage("Error: No active text editor found");
+		}else if(vscode.window.activeTextEditor.document.isUntitled)
+		{
+			//Error untitled
+			vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
 		}else
 		{
-			if(!vscode.window.activeTextEditor)
-			{
-				//Error no active text editor
-				vscode.window.showErrorMessage("Error: No active text editor found");
-			}else
-			{
-				if(vscode.window.activeTextEditor.document.isUntitled)
-				{
-					//Error untitled
-					vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
-				}else
-				{
-					leftPath = vscode.window.activeTextEditor.document.fileName;
-					success = true;
-				}
-			}
+			leftPath = vscode.window.activeTextEditor.document.fileName;
+			success = true;
 		}
 		
 		if(success)
@@ -132,35 +121,26 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				//Error untitled
 				vscode.window.showErrorMessage("Error: Can not compare to " + b.fsPath + " until it is saved");
+			}else if(b.scheme !== "file")
+			{
+				//Error not a file
+				vscode.window.showErrorMessage("Error: Can not compare that");
 			}else
 			{
-				if(b.scheme !== "file")
-				{
-					//Error not a file
-					vscode.window.showErrorMessage("Error: Can not compare that");
-				}else
-				{
-					rightPath = b.fsPath;
-				}
+				rightPath = b.fsPath;
 			}
 			
+		}else if(!vscode.window.activeTextEditor)
+		{
+			//Error no active text editor
+			vscode.window.showErrorMessage("Error: No active text editor found");
+		}else if(vscode.window.activeTextEditor.document.isUntitled)
+		{
+			//Error untitled
+			vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
 		}else
 		{
-			if(!vscode.window.activeTextEditor)
-			{
-				//Error no active text editor
-				vscode.window.showErrorMessage("Error: No active text editor found");
-			}else
-			{
-				if(vscode.window.activeTextEditor.document.isUntitled)
-				{
-					//Error untitled
-					vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
-				}else
-				{
-					rightPath = vscode.window.activeTextEditor.document.fileName;
-				}
-			}
+			rightPath = vscode.window.activeTextEditor.document.fileName;
 		}
 
 		if(rightPath !== "")
@@ -170,7 +150,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				option = "/lro";
 			}
-			openBC(bcPath() + " \"" + leftPath + "\" \"" + rightPath + "\" " + option);
+			openBC(option, leftPath, rightPath);
 		}
 	});
 	context.subscriptions.push(compareWithLeft);
@@ -207,7 +187,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(rightPath !== "")
 		{
-			openBC(bcPath() + " \"" + leftPath + "\" \"" + rightPath + "\"");
+			openBC("", leftPath, rightPath);
 		}
 	});
 	context.subscriptions.push(compareWithLeftFolder);
@@ -229,8 +209,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				return;
 			}
-
-			openBC(bcPath() + " \"" + a.fsPath + "\" \"" + file[0].fsPath + "\"");
+			openBC("", a.fsPath, file[0].fsPath);
 		});
 	});
 	context.subscriptions.push(compareWithFile);
@@ -252,8 +231,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				return;
 			}
-
-			openBC(bcPath() + " \"" + a.fsPath + "\" \"" + folder[0].fsPath + "\"");
+			openBC("", a.fsPath, folder[0].fsPath);
 		});
 	});
 	context.subscriptions.push(compareWithFolder);
@@ -274,25 +252,21 @@ export function activate(context: vscode.ExtensionContext) {
 				fullPath = a.fsPath;
 				success = true;
 			}
+		}else if(!vscode.window.activeTextEditor)
+		{
+			//Error no active text editor
+			vscode.window.showErrorMessage("Error: No active text editor found");
+		}else if(vscode.window.activeTextEditor.document.isUntitled)
+		{
+			//Error untitled
+			vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
 		}else
 		{
-			if(!vscode.window.activeTextEditor)
-			{
-				//Error no active text editor
-				vscode.window.showErrorMessage("Error: No active text editor found");
-			}else
-			{
-				if(vscode.window.activeTextEditor.document.isUntitled)
-				{
-					//Error untitled
-					vscode.window.showErrorMessage("Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
-				}else
-				{
-					fullPath = vscode.window.activeTextEditor.document.fileName;
-					success = true;
-				}
-			}
+			fullPath = vscode.window.activeTextEditor.document.fileName;
+			success = true;
 		}
+		
+		
 
 		if(!success)
 		{
@@ -325,16 +299,15 @@ export function activate(context: vscode.ExtensionContext) {
 				folderPath += "\\" + splitPath[intI];
 			}
 
-			openBC(bcPath() + " \"" + folderPath + "\" \"" + folder[0].fsPath + "\"");
+			openBC("", folderPath ,folder[0].fsPath);
 		});
 	});
 	context.subscriptions.push(compareParentWithFolder);
 
 	let compareWithSave = vscode.commands.registerCommand(extensionName + '.compareWithSave', async (a) =>
 	{
-		if(!a)//If not run by right clicking on an editor tab
+		if(!a)//If not run by right clicking on an editor tab (when run from command pallate or keybinding)
 		{
-
 			if(!vscode.window.activeTextEditor)
 			{
 				vscode.window.showErrorMessage("Error: No active text editor");
@@ -363,82 +336,78 @@ export function activate(context: vscode.ExtensionContext) {
 					compareWithSaveHelper(fileName, vscode.window.activeTextEditor.document);//If it hasn't changed, compare
 				}
 			}
-		}else//If it is run by right clicking an editor tab
+		}else if(!fs.existsSync(a.fsPath))
 		{
-			if(!fs.existsSync(a.fsPath))
+			vscode.window.showErrorMessage("Error: \"" + path.basename(a.path) + "\" has no saved version to compare to");
+			return;
+		}else //If it is run by right clicking an editor tab
+		{
+			//There is no good way to get a list of all open tabs, so I have to cycle the user through all of them
+			let maxCounter = 0;
+			while(vscode.window.activeTextEditor === undefined && maxCounter < 20)//Look for a text editor to start
 			{
-				vscode.window.showErrorMessage("Error: \"" + path.basename(a.path) + "\" has no saved version to compare to");
+				await vscode.commands.executeCommand("workbench.action.nextEditor");
+				maxCounter++;
+			}
+
+			if(vscode.window.activeTextEditor === undefined)//If one can't be found, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
+			{
+				vscode.window.showErrorMessage("Error: No open text editors found");
 				return;
+			}
+
+			let startingEditor = vscode.window.activeTextEditor.document.fileName;
+			var aEditor: vscode.TextDocument | undefined;
+			await vscode.commands.executeCommand("workbench.action.nextEditor");
+
+			while(vscode.window.activeTextEditor.document.fileName !== startingEditor)//Loop through all editors to return to the starting one
+			{
+				await vscode.commands.executeCommand("workbench.action.nextEditor");
+				if(vscode.window.activeTextEditor.document.uri.fsPath === a.fsPath)//and look for the one that is opening "a"
+				{
+					aEditor = vscode.window.activeTextEditor.document;
+				}
+			}
+			
+
+			if(aEditor === undefined)//If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
+			{
+				vscode.window.showErrorMessage("Error: couldn't find that file");
+				return;
+			}
+
+			if(aEditor.isDirty)
+			{
+				compareWithSaveHelper(a.fsPath, aEditor);
 			}else
 			{
-				//There is no good way to get a list of all open tabs, so I have to cycle the user through all of them
-				let maxCounter = 0;
-				while(vscode.window.activeTextEditor === undefined && maxCounter < 100)//Look for a text editor to start
+				vscode.window.showWarningMessage("\"" + path.basename(a.path) + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => 
 				{
-					await vscode.commands.executeCommand("workbench.action.nextEditor");
-					maxCounter++;
-				}
-
-				if(vscode.window.activeTextEditor === undefined)//If one can't be found, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
-				{
-					vscode.window.showErrorMessage("Error: No open text editors found");
-					return;
-				}
-
-				let startingEditor = vscode.window.activeTextEditor.document.fileName;
-				var aEditor: vscode.TextDocument | undefined;
-				await vscode.commands.executeCommand("workbench.action.nextEditor");
-
-				while(vscode.window.activeTextEditor.document.fileName !== startingEditor)//Loop through all editors to return to the starting one
-				{
-					await vscode.commands.executeCommand("workbench.action.nextEditor");
-					if(vscode.window.activeTextEditor.document.uri.fsPath === a.fsPath)//and look for the one that is opening "a"
+					if(answer === "Yes" && aEditor !== undefined)
 					{
-						aEditor = vscode.window.activeTextEditor.document;
+						compareWithSaveHelper(a.fsPath, aEditor);
 					}
-				}
-				
-
-				if(aEditor === undefined)//If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
-				{
-					vscode.window.showErrorMessage("Error: couldn't find that file");
-					return;
-				}
-
-				if(aEditor.isDirty)
-				{
-					compareWithSaveHelper(a.fsPath, aEditor);
-				}else
-				{
-					vscode.window.showWarningMessage("\"" + path.basename(a.path) + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => 
-					{
-						if(answer === "Yes" && aEditor !== undefined)
-						{
-							compareWithSaveHelper(a.fsPath, aEditor);
-						}
-					});
-					return;
-				}
+				});
+				return;
 			}
 		}
 	});
 	context.subscriptions.push(compareWithSave);
 
-	function compareWithSaveHelper(filePath: string, editor: vscode.TextDocument)
+	async function compareWithSaveHelper(filePath: string, editor: vscode.TextDocument)
 	{
 		let textContent = editor.getText();
 
-		let time = Date.now();
-		let editPath = "./" + "EDIT" + time + path.basename(filePath);
+		let promise = await createRandomFile(textContent, path.extname(filePath));
 
-		fs.writeFileSync(editPath, textContent);
+		let editPath = promise.fsPath;
 
-		openBC(bcPath() + " \"" + filePath + "\" \"" + fs.realpathSync(editPath) + "\" /rro");
+		openBC("/rro", filePath, editPath);
 
 		temporaryFiles.push(editPath);
 	}
 
-	let selectLeftText = vscode.commands.registerCommand(extensionName + '.selectLeftText', () =>
+	let selectLeftText = vscode.commands.registerCommand(extensionName + '.selectLeftText', async () =>
 	{
 		if(vscode.window.activeTextEditor === undefined)
 		{
@@ -447,23 +416,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
-		let time = Date.now();
-		let newPath = "./left" + time + ".txt";
 
-		fs.writeFileSync(newPath, selectedText);
+		let promise = await createRandomFile(selectedText);
+
+		let tempPath = promise.fsPath;
+
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
 		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
-		temporaryFiles.push(newPath);
-		leftPath = fs.realpathSync(newPath);
+		temporaryFiles.push(tempPath);
+		leftPath = fs.realpathSync(tempPath);
 		blnLeftReadOnly = true;
 		vscode.window.showInformationMessage("Highlighted section selected as left file");
-		//let x = fs.readFileSync("./left.txt", {encoding: "utf8"});
-
-		//vscode.window.showInformationMessage(fs.realpathSync("./left.txt"));
 	});
 	context.subscriptions.push(selectLeftText);
 
-	let compareTextWithLeft = vscode.commands.registerCommand(extensionName + '.compareWithLeftText', () =>
+	let compareTextWithLeft = vscode.commands.registerCommand(extensionName + '.compareWithLeftText', async () =>
 	{
 		if(vscode.window.activeTextEditor === undefined)
 		{
@@ -472,13 +439,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
-		let time = Date.now();
-		let newPath = "./right" + time + ".txt";
 
-		fs.writeFileSync(newPath, selectedText);
-		temporaryFiles.push(newPath);
+		let promise = await createRandomFile(selectedText);
 
-		let rightPath = fs.realpathSync(newPath);
+		let tempPath = promise.fsPath;
+
+		temporaryFiles.push(tempPath);
+
+		let rightPath = fs.realpathSync(tempPath);
 
 		let options = "/rro";
 		if(blnLeftReadOnly)
@@ -486,7 +454,7 @@ export function activate(context: vscode.ExtensionContext) {
 			options += " /lro";
 		}
 
-		openBC(bcPath() + " \"" + leftPath + "\" \"" + rightPath + "\" " + options);
+		openBC(options, leftPath, rightPath);
 	});
 	context.subscriptions.push(compareTextWithLeft);
 
@@ -505,34 +473,25 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showErrorMessage("Error: No version of that file found on the disk");
 				break;
 			case 5:
-				//Modified, compare to version on git (head) (and staged version if available?)
+				//Modified, compare current to version on git (head)
+				let case5Head: string | false = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
 
-				//let case5stagedPresent = await gitCompareHelper(a.resourceUri.fsPath, ":./", "Staged");
-				let timeCase5 = Date.now();
-				let case5HeadPresent = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./", "Head", timeCase5);
-
-				if(fs.existsSync(a.resourceUri.fsPath) && case5HeadPresent)
+				if(fs.existsSync(a.resourceUri.fsPath) && case5Head)
 				{
-					let case5file1 = fs.realpathSync("./Head" + timeCase5 + path.extname(a.resourceUri.fsPath));
-
-					openBC(bcPath() + " \"" + case5file1 + "\" \"" + a.resourceUri.fsPath + "\" /lro");
+					openBC("/lro", case5Head, a.resourceUri.fsPath);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
 				}
 				break;
 			case 0:
-				//Modified and staged, compare to verison on git (head)
-				let time = Date.now();
-				let case0StagedPresent = await gitCompareHelper(a.resourceUri.fsPath, ":./", "Staged", time);
-				let case0HeadPresent = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./", "Head", time);
+				//Modified and staged, compare staged to verison on git (head)
+				let case0Staged: string | false = await gitCompareHelper(a.resourceUri.fsPath, ":./");
+				let case0Head: string | false = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
 
-				if(case0HeadPresent && case0StagedPresent)
+				if(case0Head && case0Staged)
 				{
-					let case0file1 = fs.realpathSync("./Staged" + time + path.extname(a.resourceUri.fsPath));
-					let case0file2 = fs.realpathSync("./Head" + time + path.extname(a.resourceUri.fsPath));
-
-					openBC(bcPath() + " \"" + case0file1 + "\" \"" + case0file2 + "\" /ro");
+					openBC("/ro", case0Staged, case0Head);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -545,12 +504,13 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 	context.subscriptions.push(gitCompare);
 
-	async function gitCompareHelper(strPath: string, command: string, label: string, time: number) : Promise<boolean>
+	async function gitCompareHelper(strPath: string, command: string) : Promise<string | false>
 	{
 		let directory = path.dirname(strPath);
 		let fileName = path.basename(strPath);
 		let fileContents = "";
-		let success = false;
+		let filePath: string | false = false;
+		let promiseReturned = false;
 
 		await simpleGit(directory).outputHandler((_comand: any, standardOut: any) => 
 		{
@@ -559,22 +519,28 @@ export function activate(context: vscode.ExtensionContext) {
 				fileContents += data.toString('utf8');
 			});
 
-			standardOut.on('end', (data: any) =>
+			standardOut.on('end', async (_data: any) =>
 			{
-				//Write fileContents to file and return true
-				let ext = path.extname(strPath);
-				//let time = Date.now();
-				let newPath = "./" + label + time + ext;
-				fs.writeFileSync(newPath, fileContents);
-				temporaryFiles.push(newPath);
-				success = true;
+				//Write fileContents to file and return its path
+				let promise = await createRandomFile(fileContents, path.extname(strPath));
+				filePath = promise.fsPath;
+				temporaryFiles.push(filePath);
+				promiseReturned = true;
 			});
 		}).raw(["show", command + fileName]).catch((_error) =>
 		{
-			success = false;
+			filePath = false;
+			promiseReturned = true;
 		});
 
-		return success;
+		let loopCounter = 0;
+		while(promiseReturned === false && loopCounter < 100)//Wait for the createRandomFile to be returned before returning filePath
+		{
+			await delay(10);
+			loopCounter++;
+		}
+
+		return filePath;
 	}
 
 	let openFromDiff = vscode.commands.registerCommand(extensionName + '.openFromDiff', async () =>
@@ -597,16 +563,13 @@ export function activate(context: vscode.ExtensionContext) {
 			rightFilePath = tab.input.modified.fsPath;
 			leftFilePath = tab.input.original.fsPath;
 			
-
-			let time = Date.now();
 			if(tab.input.original.scheme === "git")
 			{
-				
-				let blnSuccess = await gitCompareHelper(leftFilePath, "HEAD:./", "Head", time);
+				let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
 
-				if(blnSuccess)
+				if(gitFilePath)
 				{
-					leftFilePath = fs.realpathSync("./Head" + time + path.extname(leftFilePath));
+					leftFilePath = gitFilePath;
 					options += " /lro";
 				}else
 				{
@@ -618,11 +581,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 			if(tab.input.modified.scheme === "git")
 			{
-				let blnSuccess = await gitCompareHelper(rightFilePath, ":./", "Staged", time);
+				let gitFilePath = await gitCompareHelper(rightFilePath, ":./");
 
-				if(blnSuccess)
+				if(gitFilePath)
 				{
-					rightFilePath = fs.realpathSync("./Staged" + time + path.extname(rightFilePath));
+					rightFilePath = gitFilePath;
 					options += " /rro";
 				}else
 				{
@@ -639,7 +602,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 
-		openBC(bcPath() + " \"" + leftFilePath + "\" \"" + rightFilePath + "\"" + options);
+		openBC(options, leftFilePath, rightFilePath);
 	});
 	context.subscriptions.push(openFromDiff);
 
@@ -653,7 +616,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			if(fs.statSync(fileLeft).isFile === fs.statSync(fileRight).isFile)
 			{
-				openBC(bcPath() + " \"" + fileLeft + "\" \"" + fileRight + "\"");
+				openBC("", fileLeft, fileRight);
 			}else
 			{
 				//Error: Can't compare files to directories
@@ -666,7 +629,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			if(fs.statSync(fileLeft).isFile === fs.statSync(fileRight).isFile && fs.statSync(fileLeft).isFile === fs.statSync(fileCenter).isFile)
 			{
-				openBC(bcPath() + " \"" + fileLeft + "\" \"" + fileRight + "\" \"" + fileCenter + "\"");
+				openBC("", fileLeft, fileRight, fileCenter);
 			}else
 			{
 				//Error: Can't compare files to directories
@@ -682,23 +645,44 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let launchBC = vscode.commands.registerCommand(extensionName + '.launchBC', () => 
 	{
-		openBC(bcPath());
+		openBC("");
 	});
 	context.subscriptions.push(launchBC);
 
 	function bcPath() : string
 	{
-		if(bcInPath)
+		if(BCPath === "bcomp")
 		{
-			return "BComp";
+			return BCPath;
 		}else
 		{
 			return "\"" + BCPath + "\"";
 		}
 	}
 
-	function openBC(cmd: string)
+	async function openBC(options: string = "", ...files: string[])
 	{
+		if(files.length > 4)//Shouldn't ever be true
+		{
+			//Error: too many files
+			vscode.window.showErrorMessage("Error: Can't open that many files in a comparison");
+			return;
+		}
+
+		let cmd = bcPath() + " ";
+
+		for(var file in files)
+		{
+			cmd += "\"" + files[file] + "\" ";
+		}
+
+		if(strOS !== 'win32')
+		{
+			options.replaceAll("/","-");
+		}
+		
+		cmd += options;
+
 		exec(cmd, (error,stdout,stderr) => 
 		{
 			if(error !== null)
@@ -712,6 +696,38 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			}
 		});
+	}
+
+	function rndName() {
+		let name = '';
+		const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		for (let i = 0; i < 10; i++) {
+			name += possible.charAt(Math.floor(Math.random() * possible.length));
+		}
+		return name;
+	}
+	
+	function createRandomFile(contents = '', fileExtension = '.txt'): Thenable<vscode.Uri> {
+		return new Promise((resolve, reject) => {
+			const tmpFile = path.join(os.tmpdir(), rndName() + fileExtension);
+			fs.writeFile(tmpFile, contents, (error) => {
+				if (error) {
+					return reject(error);
+				}
+	
+				resolve(vscode.Uri.file(tmpFile));
+			});
+		});
+	}
+
+	function delay(ms: number) {
+		return new Promise( resolve => setTimeout(resolve, ms) );
+	}
+
+	function registerCommand(commandName: string, fctn: (...args: any[]) => any)
+	{
+		let command = vscode.commands.registerCommand(extensionName + commandName, fctn);
+		context.subscriptions.push(command);
 	}
 
 }

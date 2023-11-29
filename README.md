@@ -2,57 +2,6 @@
 
 This extension allows you to open Beyond Compare directly from VSCode in several useful ways.
 
-## Features
-
-### Compare two open files
-Use this option to select a file for compare
-
-![Select a left file](images/SelectLeft.PNG)
-
-And then to pick another file to compare it to
-
-![Select a right file](images/CompareToLeft.PNG)
-
-You can also right click on files in the explorer
-
-### Compare highlighted text
-Use this option to select highlighted text for comparison, and then another selection of text to begin the compare
-
-![Select text for comparison](images/SelectLeftText.PNG)
-
-Text can also be compared to files by selcting a file for comparison first
-
-### Compare folders
-Use this option to select a folder for comparison, and then another folder to begin the compare
-
-![Select a folder for comparison](images/SelectLeftFolder.PNG)
-
-### Compare files to non-open files
-Use this option to compare a file you pick with an open dialouge
-
-![Select a file for comparison](images/CompareToFile1.PNG)
-![And then another file to compare it to](images/CompareToFile2.PNG)
-
-A similar option exists for folders in the explorer
-
-### Compare parent to folder
-Use this option to chose a file and compare the folder it's in to another folder with an open dialouge
-
-![Select a file's parent for comparison](images/ParentToFolder.PNG)
-
-### Compare to saved version
-Use this option to compare the version of a file you have open in the editor to the version stored on disk
-
-![Compare a file to the saved version](images/CompareToSave.PNG)
-
-### Compare to git repository
-Use this option to compare staged or unstaged changes to the last commit in the current branch
-
-![Compare a file to git repository](images/GitCompare.PNG)
-
-## Requirements
-
-Beyond Compare must be installed on your computer.
 
 <!-- ## Extension Settings -->
 
