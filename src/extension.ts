@@ -613,37 +613,27 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		let directory = path.dirname(strPath);
 		let fileName = path.basename(strPath);
-		let fileContents = "";
 		let filePath: string | false = false;
-		let promiseReturned = false;
 
 		await simpleGit(directory).outputHandler((_comand: any, standardOut: any) => 
 		{
-			standardOut.on('data', (data: any) =>
+			filePath = path.join(os.tmpdir(), rndName() + path.extname(strPath));
+			const writeStream = fs.createWriteStream(filePath);
+			standardOut.pipe(writeStream).on('close', () =>
 			{
-				fileContents += data.toString('utf8');
-			});
-
-			standardOut.on('end', async (_data: any) =>
-			{
-				//Write fileContents to file and return its path
-				let promise = await createRandomFile(fileContents, path.extname(strPath));
-				filePath = promise.fsPath;
-				temporaryFiles.push(filePath);
-				promiseReturned = true;
+				if(filePath)
+				{
+					temporaryFiles.push(filePath);
+				}
 			});
 		}).raw(["show", command + fileName]).catch((_error) =>
 		{
+			if(filePath)
+			{
+				fs.promises.unlink(filePath);
+			}
 			filePath = false;
-			promiseReturned = true;
 		});
-
-		let loopCounter = 0;
-		while(promiseReturned === false && loopCounter < 100)
-		{//Wait for simpleGit end to finish, but continue if it takes too long
-			await delay(10);
-			loopCounter++;
-		}
 
 		return filePath;
 	}
