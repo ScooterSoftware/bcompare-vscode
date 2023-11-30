@@ -18,9 +18,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
 	let blnLeftReadOnly = false;
-	let BCPath: string | undefined = 'bcomp';
+	let BCPath: string | undefined = 'bcompare';
 	const strOS = os.platform();
-	let threeWayCompareAllowed: boolean = false;
+	let threeWayCompareAllowed: boolean = true;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
 	const extensionName = "beyondcompareintegration";
 
@@ -30,13 +30,13 @@ export function activate(context: vscode.ExtensionContext) {
 		let versionNumbers = ['', ' 5', ' 4',' 3'];
 		for(var folder in topFolders)
 		{
-			if(BCPath !== 'bcomp')
+			if(BCPath !== 'bcompare')
 			{
 				break;
 			}
 			for(var version in versionNumbers)
 			{
-				if(BCPath === 'bcomp')
+				if(BCPath === 'bcompare')
 				{
 					try
 					{
@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
 						if(BCPath === undefined)
 						{
-							BCPath = 'bcomp';
+							BCPath = 'bcompare';
 						}
 						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
 							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
@@ -571,7 +571,18 @@ export function activate(context: vscode.ExtensionContext) {
 				//Error: Can't compare files to directories
 				vscode.window.showErrorMessage("Error: Can't compare files to directories");
 			}
-		}else if(items.length === 3 && threeWayCompareAllowed){
+		}else if(items.length === 3 && threeWayCompareAllowed)
+		{
+			if(strOS !== "win32")
+			{
+				if(!isPro())
+				{
+					threeWayCompareAllowed = false;
+					vscode.window.showErrorMessage("Error: Can't compare that many things");
+					return;
+				}
+			}
+
 			let fileLeft = items[0].fsPath;
 			let fileRight = items[2].fsPath;
 			let fileCenter = items[1].fsPath;
@@ -640,7 +651,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function bcPath() : string
 	{
-		if(BCPath === "bcomp")
+		if(BCPath === "bcompare")
 		{
 			return BCPath;
 		}else
@@ -667,7 +678,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(strOS !== 'win32')
 		{
-			options.replaceAll("/","-");
+			options = options.replaceAll("/","-");
 		}
 		
 		cmd += options;
@@ -717,6 +728,39 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		let command = vscode.commands.registerCommand(extensionName + commandName, fctn);
 		context.subscriptions.push(command);
+	}
+
+	function isPro(): boolean
+	{
+		let possiblePaths: string[] = [];
+		
+
+		if(strOS == "darwin")
+		{
+			const basePath = os.homedir() + "/Library/Application Support/Beyond Compare";
+			const isProName = "/IsPro";
+			possiblePaths.push(basePath + " 5" + isProName);
+			possiblePaths.push(basePath + " 4" + isProName);
+			possiblePaths.push(basePath + isProName);
+		}
+
+		possiblePaths[0] = os.homedir() + "/Library/Application Support/Beyond Compare/IsPro";
+
+		for(var path in possiblePaths)
+		{
+			let pathExists = fs.existsSync(possiblePaths[path]);
+			if(pathExists)
+			{
+				let bfrReturn = fs.readFileSync(possiblePaths[path]);
+				if(bfrReturn[0] == 1)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
+
 	}
 
 }
