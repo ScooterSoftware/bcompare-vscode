@@ -64,8 +64,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 
-	console.log('Congratulations, your extension "beyondcompareintegration" is now active!');
-
 	registerCommand('.selectLeft', (a) => 
 	{
 		let success = false;

@@ -282,11 +282,6 @@
         "command": "beyondcompareintegration.compareWithSave",
         "key": "alt+shift+s",
         "when": "editorFocus"
-      },
-      {
-        "command": "beyondcompareintegration.compareSelected",
-        "key": "alt+shift+5",
-        "when": "filesExplorerFocus && listMultiSelection"
       }
     ]
   },
