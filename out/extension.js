@@ -565,7 +565,7 @@ function activate(context) {
     }
     function isPro() {
         let possiblePaths = [];
-        if (strOS == "darwin") {
+        if (strOS === "darwin") {
             const basePath = os.homedir() + "/Library/Application Support/Beyond Compare";
             const isProName = "/IsPro";
             possiblePaths.push(basePath + " 5" + isProName);
@@ -577,7 +577,7 @@ function activate(context) {
             let pathExists = fs_1.default.existsSync(possiblePaths[path]);
             if (pathExists) {
                 let bfrReturn = fs_1.default.readFileSync(possiblePaths[path]);
-                if (bfrReturn[0] == 1) {
+                if (bfrReturn[0] === 1) {
                     return true;
                 }
             }

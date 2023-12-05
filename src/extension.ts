@@ -724,7 +724,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let possiblePaths: string[] = [];
 		
 
-		if(strOS == "darwin")
+		if(strOS === "darwin")
 		{
 			const basePath = os.homedir() + "/Library/Application Support/Beyond Compare";
 			const isProName = "/IsPro";
@@ -741,7 +741,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if(pathExists)
 			{
 				let bfrReturn = fs.readFileSync(possiblePaths[path]);
-				if(bfrReturn[0] == 1)
+				if(bfrReturn[0] === 1)
 				{
 					return true;
 				}
