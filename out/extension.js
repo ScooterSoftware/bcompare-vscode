@@ -73,7 +73,6 @@ function activate(context) {
             }
         }
     }
-    console.log('Congratulations, your extension "beyondcompareintegration" is now active!');
     registerCommand('.selectLeft', (a) => {
         let success = false;
         if (a) {
@@ -289,30 +288,22 @@ function activate(context) {
         }
         else //If it is run by right clicking an editor tab
          {
-            //There is no good way to get a list of all open tabs, so I have to cycle the user through all of them
-            let maxCounter = 0;
-            while (vscode.window.activeTextEditor === undefined && maxCounter < 20) //Look for a text editor to start
+            let aEditor;
+            let startingTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+            let firstLoop = true;
+            while (vscode.window.tabGroups.activeTabGroup.activeTab !== startingTab || firstLoop) //Loop through all editors to return to the starting one
              {
-                await vscode.commands.executeCommand("workbench.action.nextEditor");
-                maxCounter++;
-            }
-            if (vscode.window.activeTextEditor === undefined) //If one can't be found, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
-             {
-                vscode.window.showErrorMessage("Error: No open text editors found");
-                return;
-            }
-            let startingEditor = vscode.window.activeTextEditor.document.fileName;
-            var aEditor;
-            await vscode.commands.executeCommand("workbench.action.nextEditor");
-            while (vscode.window.activeTextEditor.document.fileName !== startingEditor) //Loop through all editors to return to the starting one
-             {
-                await vscode.commands.executeCommand("workbench.action.nextEditor");
-                if (vscode.window.activeTextEditor.document.uri.fsPath === a.fsPath) //and look for the one that is opening "a"
-                 {
-                    aEditor = vscode.window.activeTextEditor.document;
+                let editorFilePath = vscode.window?.activeTextEditor?.document?.uri?.fsPath;
+                if (editorFilePath !== undefined) { //Known bug: if another tab has the same file open as the one clicked on, that tab may be compared to save instead, depending on what tab is active
+                    if (editorFilePath === a.fsPath && vscode.window.activeTextEditor !== undefined) //and look for the one that is opening "a"
+                     {
+                        aEditor = vscode.window.activeTextEditor.document;
+                    }
                 }
+                await vscode.commands.executeCommand("workbench.action.nextEditor");
+                firstLoop = false;
             }
-            if (aEditor === undefined) //If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message)
+            if (aEditor === undefined) //If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message, or a bug occours)
              {
                 vscode.window.showErrorMessage("Error: couldn't find that file");
                 return;
@@ -321,7 +312,8 @@ function activate(context) {
                 compareWithSaveHelper(a.fsPath, aEditor);
             }
             else {
-                vscode.window.showWarningMessage("\"" + path.basename(a.path) + '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => {
+                vscode.window.showWarningMessage("\"" + path.basename(a.path) +
+                    '\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => {
                     if (answer === "Yes" && aEditor !== undefined) {
                         compareWithSaveHelper(a.fsPath, aEditor);
                     }
