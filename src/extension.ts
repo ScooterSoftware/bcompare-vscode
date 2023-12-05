@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
 	let blnLeftReadOnly = false;
-	let BCPath: string | undefined = 'bcompare';
+	let BCPath: string | undefined = 'bcomp';
 	const strOS = os.platform();
 	let threeWayCompareAllowed: boolean = true;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
@@ -30,13 +30,13 @@ export function activate(context: vscode.ExtensionContext) {
 		let versionNumbers = ['', ' 5', ' 4',' 3'];
 		for(var folder in topFolders)
 		{
-			if(BCPath !== 'bcompare')
+			if(BCPath !== 'bcomp')
 			{
 				break;
 			}
 			for(var version in versionNumbers)
 			{
-				if(BCPath === 'bcompare')
+				if(BCPath === 'bcomp')
 				{
 					try
 					{
@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
 						if(BCPath === undefined)
 						{
-							BCPath = 'bcompare';
+							BCPath = 'bcomp';
 						}
 						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
 							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
@@ -651,7 +651,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function bcPath() : string
 	{
-		if(BCPath === "bcompare")
+		if(BCPath === "bcomp")
 		{
 			return BCPath;
 		}else

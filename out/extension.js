@@ -36,13 +36,13 @@ const vsWinReg = __importStar(require("@vscode/windows-registry"));
 const os = __importStar(require("node:os"));
 let temporaryFiles = [];
 // This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+// Your extension is activated the very first time the command is executed 
 function activate(context) {
     let leftPath = "";
     let blnLeftReadOnly = false;
     let BCPath = 'bcomp';
     const strOS = os.platform();
-    let threeWayCompareAllowed = false;
+    let threeWayCompareAllowed = true;
     const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
     const extensionName = "beyondcompareintegration";
     if (strOS === 'win32') {
@@ -459,6 +459,13 @@ function activate(context) {
             }
         }
         else if (items.length === 3 && threeWayCompareAllowed) {
+            if (strOS !== "win32") {
+                if (!isPro()) {
+                    threeWayCompareAllowed = false;
+                    vscode.window.showErrorMessage("Error: Can't compare that many things");
+                    return;
+                }
+            }
             let fileLeft = items[0].fsPath;
             let fileRight = items[2].fsPath;
             let fileCenter = items[1].fsPath;
@@ -525,7 +532,7 @@ function activate(context) {
             cmd += "\"" + files[file] + "\" ";
         }
         if (strOS !== 'win32') {
-            options.replaceAll("/", "-");
+            options = options.replaceAll("/", "-");
         }
         cmd += options;
         (0, child_process_1.exec)(cmd, (error, stdout, stderr) => {
@@ -563,6 +570,27 @@ function activate(context) {
     function registerCommand(commandName, fctn) {
         let command = vscode.commands.registerCommand(extensionName + commandName, fctn);
         context.subscriptions.push(command);
+    }
+    function isPro() {
+        let possiblePaths = [];
+        if (strOS == "darwin") {
+            const basePath = os.homedir() + "/Library/Application Support/Beyond Compare";
+            const isProName = "/IsPro";
+            possiblePaths.push(basePath + " 5" + isProName);
+            possiblePaths.push(basePath + " 4" + isProName);
+            possiblePaths.push(basePath + isProName);
+        }
+        possiblePaths[0] = os.homedir() + "/Library/Application Support/Beyond Compare/IsPro";
+        for (var path in possiblePaths) {
+            let pathExists = fs_1.default.existsSync(possiblePaths[path]);
+            if (pathExists) {
+                let bfrReturn = fs_1.default.readFileSync(possiblePaths[path]);
+                if (bfrReturn[0] == 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
 exports.activate = activate;
