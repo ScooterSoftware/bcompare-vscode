@@ -6,6 +6,10 @@
   "publisher": "Scooter Software",
   "author": "",
   "icon": "./images/Logo.png",
+  "repository": {
+		"type": "git",
+		"url": "https://github.com/CalShucha-ScooterSoftware/beyondcompareintegration.git"
+	},
   "keywords": [
     "Beyondcompare",
     "Beyond-compare",

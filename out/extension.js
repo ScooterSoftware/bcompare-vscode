@@ -40,7 +40,7 @@ let temporaryFiles = [];
 function activate(context) {
     let leftPath = "";
     let blnLeftReadOnly = false;
-    let BCPath = 'bcomp';
+    let BCPath = 'bcompare';
     const strOS = os.platform();
     let threeWayCompareAllowed = true;
     const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
@@ -49,16 +49,17 @@ function activate(context) {
         let topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
         let versionNumbers = ['', ' 5', ' 4', ' 3'];
         for (var folder in topFolders) {
-            if (BCPath !== 'bcomp') {
+            if (BCPath !== 'bcompare') {
                 break;
             }
             for (var version in versionNumbers) {
-                if (BCPath === 'bcomp') {
+                if (BCPath === 'bcompare') {
                     try {
                         const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
                         BCPath = vsWinReg.GetStringRegKey(topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
                         if (BCPath === undefined) {
-                            BCPath = 'bcomp';
+                            BCPath = 'bcompare';
+                            throw child_process_1.exec;
                         }
                         let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
                         threeWayCompareAllowed = strThreeWayCompareAllowed !== "";
@@ -139,7 +140,7 @@ function activate(context) {
         if (rightPath !== "") {
             let option = "";
             if (blnLeftReadOnly) {
-                option = "/lro";
+                option = "-lro";
             }
             openBC(option, leftPath, rightPath);
         }
@@ -347,9 +348,9 @@ function activate(context) {
         let tempPath = promise.fsPath;
         temporaryFiles.push(tempPath);
         let rightPath = fs_1.default.realpathSync(tempPath);
-        let options = "/rro";
+        let options = "-rro";
         if (blnLeftReadOnly) {
-            options += " /lro";
+            options += " -lro";
         }
         openBC(options, leftPath, rightPath);
     });
@@ -369,7 +370,7 @@ function activate(context) {
                 //Modified, compare current to version on git (head)
                 let case5Head = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
                 if (fs_1.default.existsSync(a.resourceUri.fsPath) && case5Head) {
-                    openBC("/lro", case5Head, a.resourceUri.fsPath);
+                    openBC("-lro", case5Head, a.resourceUri.fsPath);
                 }
                 else {
                     vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -380,7 +381,7 @@ function activate(context) {
                 let case0Staged = await gitCompareHelper(a.resourceUri.fsPath, ":./");
                 let case0Head = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
                 if (case0Head && case0Staged) {
-                    openBC("/ro", case0Staged, case0Head);
+                    openBC("-ro", case0Staged, case0Head);
                 }
                 else {
                     vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -408,7 +409,7 @@ function activate(context) {
                 let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
                 if (gitFilePath) {
                     leftFilePath = gitFilePath;
-                    options += " /lro";
+                    options += " -lro";
                 }
                 else {
                     //Error
@@ -420,7 +421,7 @@ function activate(context) {
                 let gitFilePath = await gitCompareHelper(rightFilePath, ":./");
                 if (gitFilePath) {
                     rightFilePath = gitFilePath;
-                    options += " /rro";
+                    options += " -rro";
                 }
                 else {
                     //Error
@@ -481,7 +482,7 @@ function activate(context) {
         let textContent = editor.getText();
         let promise = await createRandomFile(textContent, path.extname(filePath));
         let editPath = promise.fsPath;
-        openBC("/rro", filePath, editPath);
+        openBC("-rro", filePath, editPath);
         temporaryFiles.push(editPath);
     }
     async function gitCompareHelper(strPath, command) {
@@ -505,7 +506,7 @@ function activate(context) {
         return filePath;
     }
     function bcPath() {
-        if (BCPath === "bcomp") {
+        if (BCPath === "bcompare") {
             return BCPath;
         }
         else {
@@ -523,9 +524,10 @@ function activate(context) {
         for (var file in files) {
             cmd += "\"" + files[file] + "\" ";
         }
-        if (strOS !== 'win32') {
-            options = options.replaceAll("/", "-");
-        }
+        // if(strOS !== 'win32')
+        // {
+        // 	options = options.replaceAll("/","-");
+        // }
         cmd += options;
         (0, child_process_1.exec)(cmd, (error, stdout, stderr) => {
             if (error !== null) {
@@ -572,7 +574,15 @@ function activate(context) {
             possiblePaths.push(basePath + " 4" + isProName);
             possiblePaths.push(basePath + isProName);
         }
-        possiblePaths[0] = os.homedir() + "/Library/Application Support/Beyond Compare/IsPro";
+        else if (strOS === "linux") {
+            const isProName = "/IsPro";
+            let versions = [" 5", " 4", ""];
+            for (version in versions) {
+                possiblePaths.push(os.homedir() + ".beyondcompare" + versions[version] + isProName);
+                possiblePaths.push(os.homedir() + process.env.XDG_CONFIG_HOME + "/beyondcompare" + versions[version] + isProName);
+                possiblePaths.push(os.homedir() + ".config/bcompare" + versions[version] + isProName);
+            }
+        }
         for (var path in possiblePaths) {
             let pathExists = fs_1.default.existsSync(possiblePaths[path]);
             if (pathExists) {

@@ -18,7 +18,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
 	let blnLeftReadOnly = false;
-	let BCPath: string | undefined = 'bcomp';
+	let BCPath: string | undefined = 'bcompare';
 	const strOS = os.platform();
 	let threeWayCompareAllowed: boolean = true;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
@@ -30,13 +30,13 @@ export function activate(context: vscode.ExtensionContext) {
 		let versionNumbers = ['', ' 5', ' 4',' 3'];
 		for(var folder in topFolders)
 		{
-			if(BCPath !== 'bcomp')
+			if(BCPath !== 'bcompare')
 			{
 				break;
 			}
 			for(var version in versionNumbers)
 			{
-				if(BCPath === 'bcomp')
+				if(BCPath === 'bcompare')
 				{
 					try
 					{
@@ -45,7 +45,8 @@ export function activate(context: vscode.ExtensionContext) {
 							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
 						if(BCPath === undefined)
 						{
-							BCPath = 'bcomp';
+							BCPath = 'bcompare';
+							throw exec;
 						}
 						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
 							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
@@ -148,7 +149,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let option = "";
 			if(blnLeftReadOnly)
 			{
-				option = "/lro";
+				option = "-lro";
 			}
 			openBC(option, leftPath, rightPath);
 		}
@@ -427,10 +428,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let rightPath = fs.realpathSync(tempPath);
 
-		let options = "/rro";
+		let options = "-rro";
 		if(blnLeftReadOnly)
 		{
-			options += " /lro";
+			options += " -lro";
 		}
 
 		openBC(options, leftPath, rightPath);
@@ -456,7 +457,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(fs.existsSync(a.resourceUri.fsPath) && case5Head)
 				{
-					openBC("/lro", case5Head, a.resourceUri.fsPath);
+					openBC("-lro", case5Head, a.resourceUri.fsPath);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -469,7 +470,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(case0Head && case0Staged)
 				{
-					openBC("/ro", case0Staged, case0Head);
+					openBC("-ro", case0Staged, case0Head);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -508,7 +509,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if(gitFilePath)
 				{
 					leftFilePath = gitFilePath;
-					options += " /lro";
+					options += " -lro";
 				}else
 				{
 					//Error
@@ -524,7 +525,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if(gitFilePath)
 				{
 					rightFilePath = gitFilePath;
-					options += " /rro";
+					options += " -rro";
 				}else
 				{
 					//Error
@@ -604,7 +605,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let editPath = promise.fsPath;
 
-		openBC("/rro", filePath, editPath);
+		openBC("-rro", filePath, editPath);
 
 		temporaryFiles.push(editPath);
 	}
@@ -640,7 +641,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function bcPath() : string
 	{
-		if(BCPath === "bcomp")
+		if(BCPath === "bcompare")
 		{
 			return BCPath;
 		}else
@@ -665,10 +666,10 @@ export function activate(context: vscode.ExtensionContext) {
 			cmd += "\"" + files[file] + "\" ";
 		}
 
-		if(strOS !== 'win32')
-		{
-			options = options.replaceAll("/","-");
-		}
+		// if(strOS !== 'win32')
+		// {
+		// 	options = options.replaceAll("/","-");
+		// }
 		
 		cmd += options;
 
@@ -731,9 +732,18 @@ export function activate(context: vscode.ExtensionContext) {
 			possiblePaths.push(basePath + " 5" + isProName);
 			possiblePaths.push(basePath + " 4" + isProName);
 			possiblePaths.push(basePath + isProName);
+		}else if(strOS === "linux")
+		{
+			const isProName = "/IsPro";
+			let versions: string[] = [" 5", " 4", ""];
+			for(version in versions)
+			{
+				possiblePaths.push(os.homedir() + ".beyondcompare" + versions[version] + isProName);
+				possiblePaths.push(os.homedir() + process.env.XDG_CONFIG_HOME + "/beyondcompare" + versions[version] + isProName);
+				possiblePaths.push(os.homedir() + ".config/bcompare" + versions[version] + isProName);
+			}
 		}
 
-		possiblePaths[0] = os.homedir() + "/Library/Application Support/Beyond Compare/IsPro";
 
 		for(var path in possiblePaths)
 		{
