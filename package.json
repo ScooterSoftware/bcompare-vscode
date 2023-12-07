@@ -8,9 +8,9 @@
   "icon": "./images/Logo.png",
   "license": "",
   "repository": {
-		"type": "git",
-		"url": "https://github.com/CalShucha-ScooterSoftware/beyondcompareintegration.git"
-	},
+    "type": "git",
+    "url": "https://github.com/CalShucha-ScooterSoftware/beyondcompareintegration.git"
+  },
   "keywords": [
     "Beyondcompare",
     "Beyond-compare",
@@ -311,6 +311,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@vscode/windows-registry": "^1.1.0"
+    "@vscode/windows-registry": "^1.1.0",
+    "simple-git": "^3.21.0"
   }
 }
