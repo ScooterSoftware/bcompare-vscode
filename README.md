@@ -50,6 +50,11 @@ Use this option to compare staged or unstaged changes to the last commit in the 
 
 ![Compare a file to git repository](images/GitCompare.PNG)
 
+### Compare Selected
+Use this option to compare 2 or 3 selected files or folders from the explorer. The pro version of Beyond Compare is required to compare 3 files.
+
+![Compare 2 or 3 files or folders from the explorer](images/CompareSelected.PNG)
+
 ## Requirements
 
 Beyond Compare must be installed on your computer.
