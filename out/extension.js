@@ -578,9 +578,9 @@ function activate(context) {
             const isProName = "/IsPro";
             let versions = ["5", "4", ""];
             for (version in versions) {
-                possiblePaths.push(os.homedir() + ".beyondcompare" + versions[version] + isProName);
-                possiblePaths.push(os.homedir() + process.env.XDG_CONFIG_HOME + "/bcompare" + versions[version] + isProName);
-                possiblePaths.push(os.homedir() + ".config/bcompare" + versions[version] + isProName);
+                possiblePaths.push(os.homedir() + "/.beyondcompare" + versions[version] + isProName);
+                possiblePaths.push(os.homedir() + "/" + process.env.XDG_CONFIG_HOME + "/bcompare" + versions[version] + isProName);
+                possiblePaths.push(os.homedir() + "/.config/bcompare" + versions[version] + isProName);
             }
         }
         for (var path in possiblePaths) {
