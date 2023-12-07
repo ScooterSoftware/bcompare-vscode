@@ -2,7 +2,7 @@
   "name": "beyondcompareintegration",
   "displayName": "Beyond Compare Integration",
   "description": "Open files in Beyond Compare directly from VSCode",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "Scooter Software",
   "author": "",
   "icon": "./images/Logo.png",
