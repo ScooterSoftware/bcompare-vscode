@@ -55,6 +55,11 @@ Use this option to compare 2 or 3 selected files or folders from the explorer. T
 
 ![Compare 2 or 3 files or folders from the explorer](images/CompareSelected.PNG)
 
+### Open Compare
+Use this button when you have a comparison open in visual studio to open it in Beyond Compare
+
+![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
+
 ## Requirements
 
 Beyond Compare must be installed on your computer.
