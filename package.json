@@ -1,5 +1,5 @@
 {
-  "name": "beyondcompareintegration",
+  "name": "bcompare-vscode",
   "displayName": "Beyond Compare VSCode",
   "description": "Open files in Beyond Compare directly from VSCode",
   "version": "0.0.3",
@@ -28,71 +28,71 @@
   "contributes": {
     "commands": [
       {
-        "command": "beyondcompareintegration.launchBC",
+        "command": "bcompare-vscode.launchBC",
         "title": "Launch Beyond Compare",
         "category": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.selectLeft",
+        "command": "bcompare-vscode.selectLeft",
         "title": "Select Left File for Compare",
         "category": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.compareWithLeft",
+        "command": "bcompare-vscode.compareWithLeft",
         "title": "Compare to Left File",
         "category": "Beyond Compare",
-        "enablement": "beyondcompareintegration.leftSelected"
+        "enablement": "bcompare-vscode.leftSelected"
       },
       {
-        "command": "beyondcompareintegration.selectLeftFolder",
+        "command": "bcompare-vscode.selectLeftFolder",
         "title": "Select Left Folder for Compare",
         "catagory": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.compareWithLeftFolder",
+        "command": "bcompare-vscode.compareWithLeftFolder",
         "title": "Compare to Left Folder",
         "category": "Beyond Compare",
-        "enablement": "beyondcompareintegration.leftFolderSelected"
+        "enablement": "bcompare-vscode.leftFolderSelected"
       },
       {
-        "command": "beyondcompareintegration.compareWithFile",
+        "command": "bcompare-vscode.compareWithFile",
         "title": "Compare to File...",
         "category": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.compareWithFolder",
+        "command": "bcompare-vscode.compareWithFolder",
         "title": "Compare to Folder...",
         "category": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.compareParent",
+        "command": "bcompare-vscode.compareParent",
         "title": "Compare Parent to Folder...",
         "category": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.compareWithSave",
+        "command": "bcompare-vscode.compareWithSave",
         "title": "Compare with Saved Version",
         "category": "Beyond Compare"
       },
       {
-        "command": "beyondcompareintegration.selectLeftText",
+        "command": "bcompare-vscode.selectLeftText",
         "title": "Select Highlighted Text as Left File",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection"
       },
       {
-        "command": "beyondcompareintegration.compareWithLeftText",
+        "command": "bcompare-vscode.compareWithLeftText",
         "title": "Compare Highlighted Text with Left File",
         "category": "Beyond Compare",
-        "enablement": "editorHasSelection && beyondcompareintegration.leftSelected"
+        "enablement": "editorHasSelection && bcompare-vscode.leftSelected"
       },
       {
-        "command": "beyondcompareintegration.gitCompare",
+        "command": "bcompare-vscode.gitCompare",
         "title": "Compare to Head with BC",
         "enablement": "scmProvider == git"
       },
       {
-        "command": "beyondcompareintegration.openFromDiff",
+        "command": "bcompare-vscode.openFromDiff",
         "title": "Open Diff in Beyond Compare",
         "enablement": "isInDiffEditor",
         "category": "Beyond Compare",
@@ -102,7 +102,7 @@
         }
       },
       {
-        "command": "beyondcompareintegration.compareSelected",
+        "command": "bcompare-vscode.compareSelected",
         "title": "Compare Selected Files",
         "enablement": "listMultiSelection === true",
         "category": "Beyond Compare"
@@ -127,24 +127,24 @@
       ],
       "editorTitleContextCompare": [
         {
-          "command": "beyondcompareintegration.selectLeft",
+          "command": "bcompare-vscode.selectLeft",
           "group": "LeftRight"
         },
         {
-          "command": "beyondcompareintegration.compareWithLeft",
+          "command": "bcompare-vscode.compareWithLeft",
           "group": "LeftRight"
         },
         {
-          "command": "beyondcompareintegration.compareWithFile"
+          "command": "bcompare-vscode.compareWithFile"
         },
         {
-          "command": "beyondcompareintegration.launchBC"
+          "command": "bcompare-vscode.launchBC"
         },
         {
-          "command": "beyondcompareintegration.compareParent"
+          "command": "bcompare-vscode.compareParent"
         },
         {
-          "command": "beyondcompareintegration.compareWithSave",
+          "command": "bcompare-vscode.compareWithSave",
           "when": "isFileSystemResource"
         }
       ],
@@ -154,137 +154,137 @@
           "when": "listMultiSelection === false"
         },
         {
-          "command": "beyondcompareintegration.compareSelected",
+          "command": "bcompare-vscode.compareSelected",
           "when": "listMultiSelection === true"
         },
         {
-          "command": "beyondcompareintegration.launchBC",
+          "command": "bcompare-vscode.launchBC",
           "when": "listMultiSelection === true"
         }
       ],
       "explorerContextCompare": [
         {
-          "command": "beyondcompareintegration.launchBC"
+          "command": "bcompare-vscode.launchBC"
         },
         {
-          "command": "beyondcompareintegration.selectLeft",
+          "command": "bcompare-vscode.selectLeft",
           "when": "explorerResourceIsFolder === false",
           "group": "LeftRight"
         },
         {
-          "command": "beyondcompareintegration.compareWithLeft",
+          "command": "bcompare-vscode.compareWithLeft",
           "when": "explorerResourceIsFolder === false",
           "group": "LeftRight"
         },
         {
-          "command": "beyondcompareintegration.compareWithFile",
+          "command": "bcompare-vscode.compareWithFile",
           "when": "explorerResourceIsFolder === false"
         },
         {
-          "command": "beyondcompareintegration.selectLeftFolder",
+          "command": "bcompare-vscode.selectLeftFolder",
           "when": "explorerResourceIsFolder",
           "group": "LeftRight"
         },
         {
-          "command": "beyondcompareintegration.compareWithLeftFolder",
+          "command": "bcompare-vscode.compareWithLeftFolder",
           "when": "explorerResourceIsFolder",
           "group": "LeftRight"
         },
         {
-          "command": "beyondcompareintegration.compareWithFolder",
+          "command": "bcompare-vscode.compareWithFolder",
           "when": "explorerResourceIsFolder"
         },
         {
-          "command": "beyondcompareintegration.compareParent",
+          "command": "bcompare-vscode.compareParent",
           "when": "explorerResourceIsFolder === false"
         }
       ],
       "editor/context": [
         {
-          "command": "beyondcompareintegration.selectLeftText"
+          "command": "bcompare-vscode.selectLeftText"
         },
         {
-          "command": "beyondcompareintegration.compareWithLeftText"
+          "command": "bcompare-vscode.compareWithLeftText"
         }
       ],
       "scm/resourceState/context": [
         {
-          "command": "beyondcompareintegration.gitCompare",
+          "command": "bcompare-vscode.gitCompare",
           "when": "scmProvider == git"
         }
       ],
       "editor/title": [
         {
-          "command": "beyondcompareintegration.openFromDiff",
+          "command": "bcompare-vscode.openFromDiff",
           "when": "isInDiffEditor",
           "group": "navigation"
         }
       ],
       "commandPalette": [
         {
-          "command": "beyondcompareintegration.selectLeftFolder",
+          "command": "bcompare-vscode.selectLeftFolder",
           "when": "false"
         },
         {
-          "command": "beyondcompareintegration.compareWithLeftFolder",
+          "command": "bcompare-vscode.compareWithLeftFolder",
           "when": "false"
         },
         {
-          "command": "beyondcompareintegration.compareWithFolder",
+          "command": "bcompare-vscode.compareWithFolder",
           "when": "false"
         },
         {
-          "command": "beyondcompareintegration.compareWithSave",
+          "command": "bcompare-vscode.compareWithSave",
           "when": "editorFocus"
         },
         {
-          "command": "beyondcompareintegration.gitCompare",
+          "command": "bcompare-vscode.gitCompare",
           "when": "false"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "beyondcompareintegration.launchBC",
+        "command": "bcompare-vscode.launchBC",
         "key": "alt+shift+b"
       },
       {
-        "command": "beyondcompareintegration.selectLeft",
+        "command": "bcompare-vscode.selectLeft",
         "key": "alt+shift+[",
         "when": "editorFocus && !editorHasSelection"
       },
       {
-        "command": "beyondcompareintegration.compareWithLeft",
+        "command": "bcompare-vscode.compareWithLeft",
         "key": "alt+shift+]",
         "when": "editorFocus && !editorHasSelection"
       },
       {
-        "command": "beyondcompareintegration.selectLeftText",
+        "command": "bcompare-vscode.selectLeftText",
         "key": "alt+shift+[",
         "when": "editorFocus && editorHasSelection"
       },
       {
-        "command": "beyondcompareintegration.compareWithLeftText",
+        "command": "bcompare-vscode.compareWithLeftText",
         "key": "alt+shift+]",
         "when": "editorFocus && editorHasSelection"
       },
       {
-        "command": "beyondcompareintegration.compareParent",
+        "command": "bcompare-vscode.compareParent",
         "key": "alt+shift+6",
         "when": "editorFocus"
       },
       {
-        "command": "beyondcompareintegration.compareWithFile",
+        "command": "bcompare-vscode.compareWithFile",
         "key": "alt+shift+5",
         "when": "editorFocus && !isInDiffEditor"
       },
       {
-        "command": "beyondcompareintegration.openFromDiff",
+        "command": "bcompare-vscode.openFromDiff",
         "key": "alt+shift+5",
         "when": "!filesExplorerFocus && isInDiffEditor"
       },
       {
-        "command": "beyondcompareintegration.compareWithSave",
+        "command": "bcompare-vscode.compareWithSave",
         "key": "alt+shift+s",
         "when": "editorFocus"
       }

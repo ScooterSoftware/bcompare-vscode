@@ -44,7 +44,7 @@ function activate(context) {
     const strOS = os.platform();
     let threeWayCompareAllowed = true;
     const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
-    const extensionName = "beyondcompareintegration";
+    const extensionName = "bcompare-vscode";
     if (strOS === 'win32') {
         let topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
         let versionNumbers = ['', ' 5', ' 4', ' 3'];

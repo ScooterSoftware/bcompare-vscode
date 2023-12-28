@@ -22,7 +22,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const strOS = os.platform();
 	let threeWayCompareAllowed: boolean = true;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
-	const extensionName = "beyondcompareintegration";
+	const extensionName = "bcompare-vscode";
 
 	if(strOS === 'win32')
 	{
