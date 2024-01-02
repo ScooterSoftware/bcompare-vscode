@@ -4,6 +4,16 @@ This extension allows you to open Beyond Compare directly from VSCode in several
 
 ## Features
 
+- [Compare two open file](#compare-two-open-files)
+- [Compare highlighted text](#compare-highlighted-text)
+- [Compare folders](#compare-folders)
+- [Compare files to non-open files](#compare-files-to-non-open-files)
+- [Compare parent to folder](#compare-parent-to-folder)
+- [Compare to saved version](#compare-to-saved-version)
+- [Compare to git repository](#compare-to-git-repository)
+- [Compare selected](#compare-selected)
+- [Open Compare](#open-compare)
+
 ### Compare two open files
 Use this option to select a file for compare
 
