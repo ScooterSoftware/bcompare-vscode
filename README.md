@@ -4,7 +4,7 @@ This extension allows you to open Beyond Compare directly from VSCode in several
 
 ## Features
 
-- [Compare two open file](#compare-two-open-files)
+- [Compare two open files](#compare-two-open-files)
 - [Compare highlighted text](#compare-highlighted-text)
 - [Compare folders](#compare-folders)
 - [Compare files to non-open files](#compare-files-to-non-open-files)
@@ -38,7 +38,7 @@ Use this option to select a folder for comparison, and then another folder to be
 ![Select a folder for comparison](images/SelectLeftFolder.PNG)
 
 ### Compare files to non-open files
-Use this option to compare a file you pick with an open dialouge
+Use this option to compare a file you pick with an open dialogue
 
 ![Select a file for comparison](images/CompareToFile1.PNG)
 ![And then another file to compare it to](images/CompareToFile2.PNG)
