@@ -15,8 +15,15 @@
     "Beyondcompare",
     "Beyond-compare",
     "Beyond",
-    "Compare"
+    "Compare",
+    "git",
+    "clipboard",
+    "diff"
   ],
+  "bugs": {
+    "url": "https://github.com/ScooterSoftware/bcompare-vscode/issues"
+  },
+  "homepage": "https://github.com/ScooterSoftware/bcompare-vscode",
   "engines": {
     "vscode": "^1.83.0"
   },
