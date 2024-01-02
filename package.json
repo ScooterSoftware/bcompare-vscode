@@ -1,10 +1,17 @@
 {
   "name": "bcompare-vscode",
-  "displayName": "Beyond Compare VSCode",
-  "description": "Open files in Beyond Compare directly from VSCode",
+  "displayName": "Beyond Compare",
+  "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
   "version": "1.0.0",
-  "publisher": "Scooter Software",
-  "author": "Scooter Software",
+  "publisher": "ScooterSoftware",
+  "contributors": [
+    "Cal Shucha",
+    {
+      "name": "Scooter Software",
+      "email": "support@scootersoftware.com",
+      "url": "https://www.scootersoftware.com/"
+    }
+  ],
   "icon": "./images/Logo.png",
   "license": "MIT",
   "repository": {
@@ -12,14 +19,12 @@
     "url": "https://github.com/ScooterSoftware/bcompare-vscode"
   },
   "keywords": [
-    "Beyondcompare",
-    "Beyond-compare",
-    "Beyond",
-    "Compare",
+    "compare",
+    "diff",
     "git",
-    "clipboard",
-    "diff"
+    "clipboard"
   ],
+  "qna": "https://forum.scootersoftware.com/",
   "bugs": {
     "url": "https://github.com/ScooterSoftware/bcompare-vscode/issues"
   },
