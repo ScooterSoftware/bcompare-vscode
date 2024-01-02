@@ -2,14 +2,14 @@
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare VSCode",
   "description": "Open files in Beyond Compare directly from VSCode",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "publisher": "Scooter Software",
-  "author": "Cal Shucha",
+  "author": "Scooter Software",
   "icon": "./images/Logo.png",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CalShucha-ScooterSoftware/beyondcompareintegration.git"
+    "url": "https://github.com/ScooterSoftware/bcompare-vscode"
   },
   "keywords": [
     "Beyondcompare",
