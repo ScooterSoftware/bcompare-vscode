@@ -2,7 +2,7 @@
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare",
   "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "ScooterSoftware",
   "contributors": [
     "Cal Shucha",
