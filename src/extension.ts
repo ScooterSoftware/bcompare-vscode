@@ -1,5 +1,4 @@
 // The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import { File } from 'buffer';
 import { exec } from 'child_process';
 import { ReadableStreamDefaultController } from 'stream/web';
@@ -12,15 +11,13 @@ import * as os from 'node:os';
 
 let temporaryFiles: string[] = [];
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed 
+// This method is called when the extension is activated
 export function activate(context: vscode.ExtensionContext) {
 
 	let leftPath = "";
 	let blnLeftReadOnly = false;
 	let BCPath: string | undefined = 'bcompare';
 	const strOS = os.platform();
-	//let threeWayCompareAllowed: boolean = true;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
 	const extensionName = "bcompare-vscode";
 
@@ -427,7 +424,7 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				break;
 			case 0:
-				//Modified and staged, compare staged to verison on git (head)
+				//Modified and staged, compare staged to version on git (head)
 				let case0Staged: string | false = await gitCompareHelper(a.resourceUri.fsPath, ":./");
 				let case0Head: string | false = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
 
@@ -716,28 +713,25 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		if(strOS === "win32")
 		{
-			let topFolders: any[] = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
 			let versionNumbers = ['', ' 5', ' 4',' 3'];
-			for(var folder in topFolders)
+			for(var version in versionNumbers)
 			{
-				for(var version in versionNumbers)
+				const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
+				try
 				{
-					const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
-					try
+					let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
+						'HKEY_CURRENT_USER', bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
+				
+					if(strThreeWayCompareAllowed === '\u0000')
 					{
-						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
-							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
-					
-						if(strThreeWayCompareAllowed === '\u0000')
-						{
-							return false;
-						}else if(strThreeWayCompareAllowed === '\u0001')
-						{
-							return true;
-						}
-					}catch{}
-				}
+						return false;
+					}else if(strThreeWayCompareAllowed === '\u0001')
+					{
+						return true;
+					}
+				}catch{}
 			}
+			
 			return true;
 		}
 
