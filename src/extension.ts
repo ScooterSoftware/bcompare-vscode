@@ -4,7 +4,7 @@ import { File } from 'buffer';
 import { exec } from 'child_process';
 import { ReadableStreamDefaultController } from 'stream/web';
 import * as vscode from 'vscode';
-import fs, { open } from 'fs';
+import fs, { open, read } from 'fs';
 import { simpleGit, SimpleGit, CleanOptions } from 'simple-git';
 import * as path from 'path';
 import * as vsWinReg from '@vscode/windows-registry';
@@ -20,48 +20,11 @@ export function activate(context: vscode.ExtensionContext) {
 	let blnLeftReadOnly = false;
 	let BCPath: string | undefined = 'bcompare';
 	const strOS = os.platform();
-	let threeWayCompareAllowed: boolean = true;
+	//let threeWayCompareAllowed: boolean = true;
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
 	const extensionName = "bcompare-vscode";
 
-	if(strOS === 'win32')
-	{
-		let topFolders: any[] = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
-		let versionNumbers = ['', ' 5', ' 4',' 3'];
-		for(var folder in topFolders)
-		{
-			if(BCPath !== 'bcompare')
-			{
-				break;
-			}
-			for(var version in versionNumbers)
-			{
-				if(BCPath === 'bcompare')
-				{
-					try
-					{
-						const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
-						BCPath = vsWinReg.GetStringRegKey(
-							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
-						if(BCPath === undefined)
-						{
-							BCPath = 'bcompare';
-							throw exec;
-						}
-						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
-							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
-						threeWayCompareAllowed = strThreeWayCompareAllowed !== "";
-					}catch
-					{
-						threeWayCompareAllowed = false;
-					}
-				}else
-				{
-					break;
-				}
-			}
-		}
-	}
+	
 
 
 
@@ -561,16 +524,12 @@ export function activate(context: vscode.ExtensionContext) {
 				//Error: Can't compare files to directories
 				vscode.window.showErrorMessage("Error: Can't compare files to directories");
 			}
-		}else if(items.length === 3 && threeWayCompareAllowed)
+		}else if(items.length === 3)
 		{
-			if(strOS !== "win32")
+			if(!isPro())
 			{
-				if(!isPro())
-				{
-					threeWayCompareAllowed = false;
-					vscode.window.showErrorMessage("Error: Can't compare that many things");
-					return;
-				}
+				vscode.window.showErrorMessage("Error: Can't compare that many things");
+				return;
 			}
 
 			let fileLeft = items[0].fsPath;
@@ -650,8 +609,46 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
+	function readRegistry() : void
+	{
+		if(strOS === 'win32')
+		{
+			let topFolders: any[] = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
+			let versionNumbers = ['', ' 5', ' 4',' 3'];
+			for(var folder in topFolders)
+			{
+				if(BCPath !== 'bcompare')
+				{
+					break;
+				}
+				for(var version in versionNumbers)
+				{
+					const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
+					if(BCPath === 'bcompare')
+					{
+						try
+						{
+							BCPath = vsWinReg.GetStringRegKey(
+								topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
+							if(BCPath === undefined || BCPath === '')//if not found, reset to default
+							{
+								BCPath = 'bcompare';
+							}
+							
+						}catch
+						{
+							BCPath = 'bcompare';
+						}
+					}
+				}
+			}
+		}
+	}
+
 	async function openBC(options: string = "", ...files: string[])
 	{
+		readRegistry();//Update path to BC (if on windows)
+
 		if(files.length > 4)//Shouldn't ever be true
 		{
 			//Error: too many files
@@ -665,11 +662,6 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			cmd += "\"" + files[file] + "\" ";
 		}
-
-		// if(strOS !== 'win32')
-		// {
-		// 	options = options.replaceAll("/","-");
-		// }
 		
 		cmd += options;
 
@@ -722,8 +714,34 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function isPro(): boolean
 	{
+		if(strOS === "win32")
+		{
+			let topFolders: any[] = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
+			let versionNumbers = ['', ' 5', ' 4',' 3'];
+			for(var folder in topFolders)
+			{
+				for(var version in versionNumbers)
+				{
+					const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
+					try
+					{
+						let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
+							topFolders[folder], bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
+					
+						if(strThreeWayCompareAllowed === '\u0000')
+						{
+							return false;
+						}else if(strThreeWayCompareAllowed === '\u0001')
+						{
+							return true;
+						}
+					}catch{}
+				}
+			}
+			return true;
+		}
+
 		let possiblePaths: string[] = [];
-		
 
 		if(strOS === "darwin")
 		{
@@ -736,7 +754,7 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			const isProName = "/IsPro";
 			let versions: string[] = ["5", "4", ""];
-			for(version in versions)
+			for(var version in versions)
 			{
 				possiblePaths.push(os.homedir() + "/.beyondcompare" + versions[version] + isProName);
 				possiblePaths.push(os.homedir() +  "/" + process.env.XDG_CONFIG_HOME + "/bcompare" + versions[version] + isProName);
@@ -754,12 +772,14 @@ export function activate(context: vscode.ExtensionContext) {
 				if(bfrReturn[0] === 1)
 				{
 					return true;
+				}else if(bfrReturn[0] === 0)
+				{
+					return false;
 				}
 			}
 		}
 
-		return false;
-
+		return true;
 	}
 
 }
