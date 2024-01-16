@@ -45,7 +45,7 @@
       },
       {
         "command": "bcompare-vscode.selectLeft",
-        "title": "Select Left File for Compare",
+        "title": "Select Left File",
         "category": "Beyond Compare"
       },
       {
@@ -56,7 +56,7 @@
       },
       {
         "command": "bcompare-vscode.selectLeftFolder",
-        "title": "Select Left Folder for Compare",
+        "title": "Select Left Folder",
         "catagory": "Beyond Compare"
       },
       {
@@ -82,7 +82,7 @@
       },
       {
         "command": "bcompare-vscode.compareWithSave",
-        "title": "Compare with Saved Version",
+        "title": "Compare to Last Save",
         "category": "Beyond Compare"
       },
       {
@@ -113,9 +113,15 @@
         }
       },
       {
+        "command": "bcompare-vscode.mergeSelected",
+        "title": "Merge Selected Items",
+        "enablement": "listMultiSelection === true && listDoubleSelection === false",
+        "category": "Beyond Compare"
+      },
+      {
         "command": "bcompare-vscode.compareSelected",
-        "title": "Compare Selected Files",
-        "enablement": "listMultiSelection === true",
+        "title": "Compare Selected Items",
+        "enablement": "listDoubleSelection === true",
         "category": "Beyond Compare"
       }
     ],
@@ -126,6 +132,10 @@
       },
       {
         "id": "explorerContextCompare",
+        "label": "Beyond Compare"
+      },
+      {
+        "id": "explorerMultiContextCompare",
         "label": "Beyond Compare"
       }
     ],
@@ -143,10 +153,12 @@
         },
         {
           "command": "bcompare-vscode.compareWithLeft",
-          "group": "LeftRight"
+          "group": "LeftRight",
+          "when": "bcompare-vscode.leftSelected"
         },
         {
-          "command": "bcompare-vscode.compareWithFile"
+          "command": "bcompare-vscode.compareWithFile",
+          "when": "bcompare-vscode.leftFileSelected"
         },
         {
           "command": "bcompare-vscode.launchBC"
@@ -165,17 +177,30 @@
           "when": "listMultiSelection === false"
         },
         {
+          "submenu": "explorerMultiContextCompare",
+          "when": "listMultiSelection"
+        }
+      ],
+      "explorerMultiContextCompare": [
+        {
           "command": "bcompare-vscode.compareSelected",
-          "when": "listMultiSelection === true"
+          "when": "listDoubleSelection === true"
         },
         {
-          "command": "bcompare-vscode.launchBC",
-          "when": "listMultiSelection === true"
+          "command": "bcompare-vscode.mergeSelected",
+          "when": "listDoubleSelection === false"
+        },
+        {
+          "command": "bcompare-vscode.launchBC"
         }
       ],
       "explorerContextCompare": [
         {
           "command": "bcompare-vscode.launchBC"
+        },
+        {
+          "command": "bcompare-vscode.compareParent",
+          "when": "explorerResourceIsFolder === false"
         },
         {
           "command": "bcompare-vscode.selectLeft",
@@ -184,7 +209,7 @@
         },
         {
           "command": "bcompare-vscode.compareWithLeft",
-          "when": "explorerResourceIsFolder === false",
+          "when": "explorerResourceIsFolder === false && bcompare-vscode.leftSelected",
           "group": "LeftRight"
         },
         {
@@ -198,16 +223,12 @@
         },
         {
           "command": "bcompare-vscode.compareWithLeftFolder",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && bcompare-vscode.leftFolderSelected",
           "group": "LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithFolder",
           "when": "explorerResourceIsFolder"
-        },
-        {
-          "command": "bcompare-vscode.compareParent",
-          "when": "explorerResourceIsFolder === false"
         }
       ],
       "editor/context": [
@@ -215,7 +236,8 @@
           "command": "bcompare-vscode.selectLeftText"
         },
         {
-          "command": "bcompare-vscode.compareWithLeftText"
+          "command": "bcompare-vscode.compareWithLeftText",
+          "when": "bcompare-vscode.leftSelected"
         }
       ],
       "scm/resourceState/context": [

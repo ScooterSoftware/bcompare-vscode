@@ -111,6 +111,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				option = "-lro";
 			}
+			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 			openBC(option, leftPath, rightPath);
 		}
 	});
@@ -147,6 +148,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(rightPath !== "")
 		{
+			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
 			openBC("", leftPath, rightPath);
 		}
 	});
@@ -394,6 +396,7 @@ export function activate(context: vscode.ExtensionContext) {
 			options += " -lro";
 		}
 
+		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 		openBC(options, leftPath, rightPath);
 	});
 
@@ -506,6 +509,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.compareSelected', (...a) =>
 	{
+		compareSelected(a);
+	});
+
+	registerCommand('.mergeSelected', (...a) =>
+	{
+		compareSelected(a);
+	});
+
+	registerCommand('.launchBC', () => 
+	{
+		openBC("");
+	});
+
+	function compareSelected(a: any[])
+	{
 		const items = a[1];
 		if(items.length === 2)
 		{
@@ -546,12 +564,7 @@ export function activate(context: vscode.ExtensionContext) {
 			//Error: to many for compare
 			vscode.window.showErrorMessage("Error: Can't compare that many things");
 		}
-	});
-
-	registerCommand('.launchBC', () => 
-	{
-		openBC("");
-	});
+	}
 
 	async function compareWithSaveHelper(filePath: string, editor: vscode.TextDocument)
 	{
@@ -661,6 +674,8 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		
 		cmd += options;
+
+		//Clear left file/folder
 
 		exec(cmd, (error,stdout,stderr) => 
 		{
@@ -779,7 +794,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 
-// This method is called when your extension is deactivated
+// This method is called when the extension is deactivated
 export function deactivate() 
 {
 	temporaryFiles.forEach((file) =>//Delete all temporary files created by this extension
