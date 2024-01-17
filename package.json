@@ -115,7 +115,7 @@
       {
         "command": "bcompare-vscode.mergeSelected",
         "title": "Merge Selected Items",
-        "enablement": "listMultiSelection === true && listDoubleSelection === false",
+        "enablement": "listMultiSelection === true && listDoubleSelection === false && false",
         "category": "Beyond Compare"
       },
       {
@@ -149,26 +149,29 @@
       "editorTitleContextCompare": [
         {
           "command": "bcompare-vscode.selectLeft",
-          "group": "LeftRight"
+          "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithLeft",
-          "group": "LeftRight",
+          "group": "1LeftRight",
           "when": "bcompare-vscode.leftSelected"
         },
         {
           "command": "bcompare-vscode.compareWithFile",
-          "when": "bcompare-vscode.leftFileSelected"
+          "group": "2general@2"
         },
         {
-          "command": "bcompare-vscode.launchBC"
+          "command": "bcompare-vscode.launchBC",
+          "group": "2general@4"
         },
         {
-          "command": "bcompare-vscode.compareParent"
+          "command": "bcompare-vscode.compareParent",
+          "group": "2general@3"
         },
         {
           "command": "bcompare-vscode.compareWithSave",
-          "when": "isFileSystemResource"
+          "when": "isFileSystemResource",
+          "group": "2general@1"
         }
       ],
       "explorer/context": [
@@ -184,51 +187,58 @@
       "explorerMultiContextCompare": [
         {
           "command": "bcompare-vscode.compareSelected",
-          "when": "listDoubleSelection === true"
+          "when": "listDoubleSelection === true",
+          "group": "general@1"
         },
         {
           "command": "bcompare-vscode.mergeSelected",
-          "when": "listDoubleSelection === false"
+          "when": "listDoubleSelection === false && false",
+          "group": "general@2"
         },
         {
-          "command": "bcompare-vscode.launchBC"
+          "command": "bcompare-vscode.launchBC",
+          "group": "general@3"
         }
       ],
       "explorerContextCompare": [
         {
-          "command": "bcompare-vscode.launchBC"
+          "command": "bcompare-vscode.launchBC",
+          "group": "2general@4"
         },
         {
           "command": "bcompare-vscode.compareParent",
-          "when": "explorerResourceIsFolder === false"
+          "when": "explorerResourceIsFolder === false",
+          "group": "2general@3"
         },
         {
           "command": "bcompare-vscode.selectLeft",
           "when": "explorerResourceIsFolder === false",
-          "group": "LeftRight"
+          "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithLeft",
           "when": "explorerResourceIsFolder === false && bcompare-vscode.leftSelected",
-          "group": "LeftRight"
+          "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithFile",
-          "when": "explorerResourceIsFolder === false"
+          "when": "explorerResourceIsFolder === false",
+          "group": "2general@1"
         },
         {
           "command": "bcompare-vscode.selectLeftFolder",
           "when": "explorerResourceIsFolder",
-          "group": "LeftRight"
+          "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithLeftFolder",
           "when": "explorerResourceIsFolder && bcompare-vscode.leftFolderSelected",
-          "group": "LeftRight"
+          "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithFolder",
-          "when": "explorerResourceIsFolder"
+          "when": "explorerResourceIsFolder",
+          "group": "2general@2"
         }
       ],
       "editor/context": [
