@@ -62,12 +62,22 @@ Use this option to compare staged or unstaged changes to the last commit in the 
 
 ### Compare Selected
 Use this option to compare 2 selected files or folders from the explorer.
+
 ![Compare 2 files or folders from the explorer](images/CompareSelected.PNG)
 
 ### Open Compare
 Use this button when you have a comparison open in VSCode to open it in Beyond Compare.
 
 ![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
+
+### Clipboard Compare
+Use this option to compare the text on your clipboard to an open file
+
+![Compare text to an open file](images/CompareFileToClipboard.PNG)
+
+Or to a highlighted selection of text
+
+![Compare text to your clipboard](images/CompareTextToClipboard.PNG)
 
 ## Requirements
 

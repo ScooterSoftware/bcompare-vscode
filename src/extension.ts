@@ -517,6 +517,85 @@ export function activate(context: vscode.ExtensionContext) {
 		compareSelected(a);
 	});
 
+	registerCommand('.compareFileToClipboard', async (a) =>
+	{
+		let comparePath = "";
+		if(a)
+		{
+			if(a.scheme === 'untitled')
+			{
+				//Error untitled
+				vscode.window.showErrorMessage(
+					"Error: Can not compare to " + a.fsPath + " until it is saved");
+			}else if(a.scheme !== "file")
+			{
+				//Error not a file
+				vscode.window.showErrorMessage("Error: Can not compare that");
+			}else
+			{
+				comparePath = a.fsPath;
+			}
+			
+		}else if(!vscode.window.activeTextEditor)
+		{
+			//Error no active text editor
+			vscode.window.showErrorMessage("Error: No active text editor found");
+		}else if(vscode.window.activeTextEditor.document.isUntitled)
+		{
+			//Error untitled
+			vscode.window.showErrorMessage(
+				"Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
+		}else
+		{
+			comparePath = vscode.window.activeTextEditor.document.fileName;
+		}
+
+		if(comparePath !== "")
+		{
+			let clipboardPath = await saveClipboardToFile();
+			if(clipboardPath === false)
+			{
+				vscode.window.showErrorMessage("Error: Clipboard does not conatin readable text");
+			}else
+			{
+				openBC("-rro", comparePath, clipboardPath);
+			}
+		}
+	});
+
+	registerCommand('.compareTextToClipboard', async () =>
+	{
+		if(vscode.window.activeTextEditor === undefined)
+		{
+			return;//This should be impossible, as this command requires an active text editor to be enabled
+		}
+
+		let selection = vscode.window.activeTextEditor.selection;
+		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
+
+		let promise = await createRandomFile(selectedText);
+
+		let tempPath = promise.fsPath;
+
+		temporaryFiles.push(tempPath);
+		let comparePath = fs.realpathSync(tempPath);
+
+		if(comparePath !== "")
+		{
+			let clipboardPath = await saveClipboardToFile();
+			if(clipboardPath === false)
+			{
+				vscode.window.showErrorMessage("Error: Clipboard does not conatin readable text");
+			}else
+			{
+				openBC("-ro", comparePath, clipboardPath);
+			}
+		}else
+		{//Should never happen
+			vscode.window.showErrorMessage("Error: No text selected");
+		}
+	});
+
 	registerCommand('.launchBC', () => 
 	{
 		openBC("");
@@ -606,6 +685,22 @@ export function activate(context: vscode.ExtensionContext) {
 		});
 
 		return filePath;
+	}
+
+	async function saveClipboardToFile() : Promise<string | false>
+	{
+		let contents = await vscode.env.clipboard.readText();
+
+		if(contents === '')
+		{
+			return false;
+		}
+
+		let promise = await createRandomFile(contents);
+		let returnPath = promise.fsPath;
+		temporaryFiles.push(returnPath);
+
+		return returnPath;
 	}
 
 	function bcPath() : string

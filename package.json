@@ -21,7 +21,8 @@
   "keywords": [
     "compare",
     "diff",
-    "git"
+    "git",
+    "clipboard"
   ],
   "qna": "https://forum.scootersoftware.com/",
   "bugs": {
@@ -123,6 +124,17 @@
         "title": "Compare Selected Items",
         "enablement": "listDoubleSelection === true",
         "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareFileToClipboard",
+        "title": "Compare to Clipboard Contents",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareTextToClipboard",
+        "title": "Compare Text to Clipboard Contents",
+        "category": "Beyond Compare",
+        "enablement": "editorHasSelection"
       }
     ],
     "submenus": [
@@ -136,6 +148,10 @@
       },
       {
         "id": "explorerMultiContextCompare",
+        "label": "Beyond Compare"
+      },
+      {
+        "id": "editorContextCompare",
         "label": "Beyond Compare"
       }
     ],
@@ -162,7 +178,7 @@
         },
         {
           "command": "bcompare-vscode.launchBC",
-          "group": "2general@4"
+          "group": "2general@5"
         },
         {
           "command": "bcompare-vscode.compareParent",
@@ -172,6 +188,10 @@
           "command": "bcompare-vscode.compareWithSave",
           "when": "isFileSystemResource",
           "group": "2general@1"
+        },
+        {
+          "command": "bcompare-vscode.compareFileToClipboard",
+          "group": "2general@4"
         }
       ],
       "explorer/context": [
@@ -243,11 +263,24 @@
       ],
       "editor/context": [
         {
-          "command": "bcompare-vscode.selectLeftText"
+          "submenu": "editorContextCompare",
+          "when": "editorHasSelection"
+        }
+      ],
+      "editorContextCompare": [
+        {
+          "command": "bcompare-vscode.selectLeftText",
+          "when": "editorHasSelection",
+          "group": "LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithLeftText",
-          "when": "bcompare-vscode.leftSelected"
+          "when": "bcompare-vscode.leftSelected && editorHasSelection",
+          "group": "LeftRight"
+        },
+        {
+          "command": "bcompare-vscode.compareTextToClipboard",
+          "when": "editorHasSelection"
         }
       ],
       "scm/resourceState/context": [
@@ -330,6 +363,16 @@
         "command": "bcompare-vscode.compareWithSave",
         "key": "alt+shift+s",
         "when": "editorFocus"
+      },
+      {
+        "command": "bcompare-vscode.compareFileToClipboard",
+        "key": "alt+shift+v",
+        "when": "editorFocus && !editorHasSelection"
+      },
+      {
+        "command": "bcompare-vscode.compareTextToClipboard",
+        "key": "alt+shift+v",
+        "when": "editorFocus && editorHasSelection"
       }
     ]
   },
