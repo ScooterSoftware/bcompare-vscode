@@ -10,19 +10,28 @@ import * as vsWinReg from '@vscode/windows-registry';
 import * as os from 'node:os';
 
 let temporaryFiles: string[] = [];
+let leftPath = "";
+let globalState : vscode.Memento;
 
 // This method is called when the extension is activated
 export function activate(context: vscode.ExtensionContext) {
 
-	let leftPath = "";
 	let blnLeftReadOnly = false;
 	let BCPath: string | undefined = 'bcompare';
 	const strOS = os.platform();
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
 	const extensionName = "bcompare-vscode";
+	globalState = context.globalState;
 
+	readLeftPath();
 	
+	vscode.window.onDidChangeWindowState(state => { 
 
+		if (state.focused) 
+		{ 
+			readLeftPath();
+		}
+	}); 
 
 
 	registerCommand('.selectLeft', (a) => 
@@ -42,6 +51,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}else
 			{
 				leftPath = a.fsPath;
+				writeLeftPath(a.fsPath);
 				success = true;
 			}
 			
@@ -57,6 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}else
 		{
 			leftPath = vscode.window.activeTextEditor.document.fileName;
+			writeLeftPath(leftPath);
 			success = true;
 		}
 		
@@ -113,6 +124,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 			openBC(option, leftPath, rightPath);
+			clearLeftPath();
 		}
 	});
 
@@ -121,6 +133,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if(a)
 		{
 			leftPath = a.fsPath;
+			writeLeftPath(a.fsPath);
 		}else
 		{
 			//Error-no folder
@@ -150,6 +163,7 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
 			openBC("", leftPath, rightPath);
+			clearLeftPath();
 		}
 	});
 
@@ -368,6 +382,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
 		temporaryFiles.push(tempPath);
 		leftPath = fs.realpathSync(tempPath);
+		writeLeftPath(leftPath, true);
 		blnLeftReadOnly = true;
 		vscode.window.showInformationMessage("Highlighted section selected as left file");
 	});
@@ -398,6 +413,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 		openBC(options, leftPath, rightPath);
+		clearLeftPath();
 	});
 
 	registerCommand('.gitCompare', async (a) => 
@@ -610,7 +626,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let fileLeft = items[0].fsPath;
 			let fileRight = items[1].fsPath;
 
-			if(fs.statSync(fileLeft).isFile === fs.statSync(fileRight).isFile)
+			if(fs.statSync(fileLeft).isFile() === fs.statSync(fileRight).isFile())
 			{
 				openBC("", fileLeft, fileRight);
 			}else
@@ -886,14 +902,93 @@ export function activate(context: vscode.ExtensionContext) {
 		return true;
 	}
 
+	function writeLeftPath(strPath : string, blnTempFile : boolean = false)
+	{
+		if(globalState.get("leftIsPreserved"))//If the current left path is a temp file
+		{
+			let globalLeft = verifyIsString(globalState.get("leftPath"));
+			if(!temporaryFiles.includes(globalLeft))//And it isn't already in temp files
+			{
+				temporaryFiles.push(globalLeft);//Add it
+			}
+		}
+
+		globalState.update("leftPath", strPath);
+
+		if(blnTempFile)
+		{
+			globalState.update("leftIsPreserved", true);
+		}else
+		{
+			globalState.update("leftIsPreserved", false);
+		}
+	}
+
+	function readLeftPath()
+	{
+		//Read path
+		let readFilePath : string = verifyIsString(globalState.get("leftPath"));
+		let leftPreserved = globalState.get("leftIsPreserved");
+
+		if(leftPreserved) //Check if path was a temp file that was preserved
+		{
+			temporaryFiles.push(readFilePath);//Add it to temp files
+			blnLeftReadOnly = true;
+			//globalState.update("leftIsPreserved", false);//set left preserved to false so another instance doesn't add it too
+		}
+
+
+		if(readFilePath === '' || !fs.existsSync(readFilePath))//No left item or left item was deleted
+		{
+			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
+			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
+			readFilePath = '';
+		}else if(fs.statSync(readFilePath).isFile())//Left item is file
+		{
+			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
+			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
+		}else//Left item is folder
+		{
+			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
+			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', true);
+		}
+
+		leftPath = readFilePath;
+	}
+
+	function clearLeftPath()
+	{
+		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
+		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
+		leftPath = "";
+
+		writeLeftPath("");
+		globalState.update("leftIsPreserved", false);
+	}
+}
+
+function verifyIsString(strInput : any, strDefault : string = "") : string
+{
+	if(typeof strInput === "string")
+	{
+		return strInput;
+	}else
+	{
+		return strDefault;
+	}
 }
 
 
 // This method is called when the extension is deactivated
 export function deactivate() 
 {
+	leftPath = verifyIsString(globalState.get("leftPath"));//Make sure that leftPath is updated
+
 	temporaryFiles.forEach((file) =>//Delete all temporary files created by this extension
 	{
-		fs.promises.unlink(file);
+		if(fs.existsSync(file) && file !== leftPath) //but not the left file
+		{
+			fs.promises.unlink(file);
+		}
 	});
 }
