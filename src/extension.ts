@@ -33,6 +33,21 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}); 
 
+	vscode.window.tabGroups.onDidChangeTabs(event => {
+		if(event.opened.length >= 1 && true) //Put option here
+		{
+			event.opened.forEach((tab) => {
+				if(tab.input instanceof vscode.TabInputTextDiff)
+				{	
+					openFromDiffHelper(tab.input);
+					vscode.window.tabGroups.close(tab);
+				}
+			});
+
+			//vscode.window.tabGroups.close(event.opened);
+		}
+	});
+
 
 	registerCommand('.selectLeft', (a) => 
 	{
@@ -465,9 +480,6 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		let tab = vscode.window.tabGroups.activeTabGroup.activeTab;
 
-		let leftFilePath = "";
-		let rightFilePath = "";
-
 		if(tab === undefined)
 		{
 			//Error: no tab active
@@ -475,43 +487,44 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		let options = "";
 		if(tab.input instanceof vscode.TabInputTextDiff)
 		{
-			rightFilePath = tab.input.modified.fsPath;
-			leftFilePath = tab.input.original.fsPath;
+			// rightFilePath = tab.input.modified.fsPath;
+			// leftFilePath = tab.input.original.fsPath;
 			
-			if(tab.input.original.scheme === "git")
-			{
-				let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
+			// if(tab.input.original.scheme === "git")
+			// {
+			// 	let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
 
-				if(gitFilePath)
-				{
-					leftFilePath = gitFilePath;
-					options += " -lro";
-				}else
-				{
-					//Error
-					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
-					return;
-				}
-			}
+			// 	if(gitFilePath)
+			// 	{
+			// 		leftFilePath = gitFilePath;
+			// 		options += " -lro";
+			// 	}else
+			// 	{
+			// 		//Error
+			// 		vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+			// 		return;
+			// 	}
+			// }
 
-			if(tab.input.modified.scheme === "git")
-			{
-				let gitFilePath = await gitCompareHelper(rightFilePath, ":./");
+			// if(tab.input.modified.scheme === "git")
+			// {
+			// 	let gitFilePath = await gitCompareHelper(rightFilePath, ":./");
 
-				if(gitFilePath)
-				{
-					rightFilePath = gitFilePath;
-					options += " -rro";
-				}else
-				{
-					//Error
-					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
-					return;
-				}
-			}
+			// 	if(gitFilePath)
+			// 	{
+			// 		rightFilePath = gitFilePath;
+			// 		options += " -rro";
+			// 	}else
+			// 	{
+			// 		//Error
+			// 		vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+			// 		return;
+			// 	}
+			// }
+
+			openFromDiffHelper(tab.input);
 		}else
 		{
 			//Error-not a diff tab
@@ -520,7 +533,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 
-		openBC(options, leftFilePath, rightFilePath);
+		// openBC(options, leftFilePath, rightFilePath);
 	});
 
 	registerCommand('.compareSelected', (...a) =>
@@ -914,14 +927,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		globalState.update("leftPath", strPath);
-
-		if(blnTempFile)
-		{
-			globalState.update("leftIsPreserved", true);
-		}else
-		{
-			globalState.update("leftIsPreserved", false);
-		}
+		globalState.update("leftIsPreserved", blnTempFile);
 	}
 
 	function readLeftPath()
@@ -964,6 +970,47 @@ export function activate(context: vscode.ExtensionContext) {
 
 		writeLeftPath("");
 		globalState.update("leftIsPreserved", false);
+	}
+
+	async function openFromDiffHelper(tabInput : vscode.TabInputTextDiff)
+	{
+		let rightFilePath = tabInput.modified.fsPath;
+		let leftFilePath = tabInput.original.fsPath;
+		let options = "";
+		
+		if(tabInput.original.scheme === "git")
+		{
+			let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
+
+			if(gitFilePath)
+			{
+				leftFilePath = gitFilePath;
+				options += " -lro";
+			}else
+			{
+				//Error
+				vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+				return;
+			}
+		}
+
+		if(tabInput.modified.scheme === "git")
+		{
+			let gitFilePath = await gitCompareHelper(rightFilePath, ":./");
+
+			if(gitFilePath)
+			{
+				rightFilePath = gitFilePath;
+				options += " -rro";
+			}else
+			{
+				//Error
+				vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+				return;
+			}
+		}
+
+		openBC(options, leftFilePath, rightFilePath);
 	}
 }
 
