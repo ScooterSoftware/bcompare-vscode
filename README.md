@@ -13,7 +13,8 @@ This extension allows you to open Beyond Compare directly from VSCode in several
 - [Compare to git repository](#compare-to-git-repository)
 - [Compare selected](#compare-selected)
 - [Open compare](#open-compare)
-- [Compare to clipboard](#Compare-to-clipboard)
+- [Compare to clipboard](#compare-to-clipboard)
+- [Automatically open Beyond Compare](#automatically-open-beyond-compare)
 
 ### Compare two open files
 Use this option to select a file for comparison.
@@ -81,6 +82,13 @@ Use this option to compare the text on your clipboard to an open file.
 Or to a highlighted selection of text.
 
 ![Compare text to your clipboard](images/CompareTextToClipboard.PNG)
+
+## Settings
+
+### Automatically open Beyond Compare
+Use this setting to skip VSCode's built in comparison screen and go straight to Beyond Compare
+
+![Automatically open Beyond Compare](images/AutoOpenBCSetting.PNG)
 
 ## Requirements
 
