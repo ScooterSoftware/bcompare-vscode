@@ -12,8 +12,8 @@ This extension allows you to open Beyond Compare directly from VSCode in several
 - [Compare to saved version](#compare-to-saved-version)
 - [Compare to git repository](#compare-to-git-repository)
 - [Compare selected](#compare-selected)
-- [Open Compare](#open-compare)
-- [Clipboard Compare](#clipboard-compare)
+- [Open compare](#open-compare)
+- [Compare to clipboard](#Compare-to-clipboard)
 
 ### Compare two open files
 Use this option to select a file for comparison.
@@ -71,7 +71,9 @@ Use this button when you have a comparison open in VSCode to open it in Beyond C
 
 ![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
 
-### Clipboard Compare
+There is also a setting to automatically open BC whenever a comparison is opened
+
+### Compare to Clipboard
 Use this option to compare the text on your clipboard to an open file.
 
 ![Compare text to an open file](images/CompareFileToClipboard.PNG)
