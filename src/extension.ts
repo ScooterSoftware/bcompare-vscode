@@ -34,14 +34,17 @@ export function activate(context: vscode.ExtensionContext) {
 	}); 
 
 	vscode.window.tabGroups.onDidChangeTabs(event => {
-		if(event.opened.length >= 1 && true) //Put option here
+		if(event.opened.length >= 1 && vscode.workspace.getConfiguration("bcompare-vscode").skipDefaultCompareTool)
 		{
 			event.opened.forEach((tab) => {
-				if(tab.input instanceof vscode.TabInputTextDiff)
-				{	
-					openFromDiffHelper(tab.input);
-					vscode.window.tabGroups.close(tab);
-				}
+				try //Try-catch in case another extension messes with things first
+				{
+					if(tab.input instanceof vscode.TabInputTextDiff)
+					{	
+						openFromDiffHelper(tab.input);
+						vscode.window.tabGroups.close(tab);
+					}
+				}catch(e){}
 			});
 
 			//vscode.window.tabGroups.close(event.opened);

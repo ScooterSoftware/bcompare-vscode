@@ -3,7 +3,9 @@
 ## 1.0.2
 
 - Added options to compare files or highlighted text to your clipboard
+- Added a setting to use always Beyond Compare instead of VS Code's default compare tool
 - Selecting a left file/folder will now select it for all your instances of VScode, and it will be remembered even after VScode is closed
+- Comparing a file/folder to a selected left file/folder will now deselect the left one afterwards
 - An error message is now properly displayed when trying to compare folders to files in the explorer
 - Fixed minor typos in the README
 - Removed the ability to compare 3 files/folders from the explorer

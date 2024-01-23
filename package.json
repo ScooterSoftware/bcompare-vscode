@@ -376,7 +376,17 @@
         "key": "alt+shift+v",
         "when": "editorFocus && editorHasSelection"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Beyond Compare",
+      "properties": {
+        "bcompare-vscode.skipDefaultCompareTool": {
+          "type": "boolean",
+          "default": "false",
+          "description": "When checked, any time VSCode would open its default compare tool, Beyond Compare will be opened instead"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
