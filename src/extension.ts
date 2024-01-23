@@ -63,8 +63,6 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				}catch(e){}
 			});
-
-			//vscode.window.tabGroups.close(event.opened);
 		}
 	});
 
@@ -509,41 +507,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(tab.input instanceof vscode.TabInputTextDiff)
 		{
-			// rightFilePath = tab.input.modified.fsPath;
-			// leftFilePath = tab.input.original.fsPath;
-			
-			// if(tab.input.original.scheme === "git")
-			// {
-			// 	let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
-
-			// 	if(gitFilePath)
-			// 	{
-			// 		leftFilePath = gitFilePath;
-			// 		options += " -lro";
-			// 	}else
-			// 	{
-			// 		//Error
-			// 		vscode.window.showErrorMessage("Error: an error occurred while reading from git");
-			// 		return;
-			// 	}
-			// }
-
-			// if(tab.input.modified.scheme === "git")
-			// {
-			// 	let gitFilePath = await gitCompareHelper(rightFilePath, ":./");
-
-			// 	if(gitFilePath)
-			// 	{
-			// 		rightFilePath = gitFilePath;
-			// 		options += " -rro";
-			// 	}else
-			// 	{
-			// 		//Error
-			// 		vscode.window.showErrorMessage("Error: an error occurred while reading from git");
-			// 		return;
-			// 	}
-			// }
-
 			openFromDiffHelper(tab.input);
 		}else
 		{
@@ -551,9 +514,6 @@ export function activate(context: vscode.ExtensionContext) {
 			vscode.window.showErrorMessage("Error: Current tab is not a text comparison");
 			return;
 		}
-
-
-		// openBC(options, leftFilePath, rightFilePath);
 	});
 
 	registerCommand('.compareSelected', (...a) =>
@@ -960,7 +920,6 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			temporaryFiles.push(readFilePath);//Add it to temp files
 			blnLeftReadOnly = true;
-			//globalState.update("leftIsPreserved", false);//set left preserved to false so another instance doesn't add it too
 		}
 
 
