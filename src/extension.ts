@@ -1,3 +1,20 @@
+//A note on changing the order of items in a context menu:
+//To have full control of the order, all items in a menu should have a defined group
+//Note: the group is defined in package.json for each individual menu, not within the section where commands are defined
+//Items with the same group string will show up in the same "group" with groups divided by black bars
+//Gropus will be added to the menu alphabetically
+//Group names aren't visible to the user (as far as I can tell), so they can be anything
+//By default, menu items will be ordered alphabetically by command/submenu name
+//To choose the order in which items appear, add "@#" to the end of the group string with # being the command's position in the menu
+//Items will still be in the same group even if they have different "@#" at the end of the group string
+
+//For example: to have menu item "foo" appear before menu item "bar" within a group named "general",
+//foo should have a group string of "general@1" and bar should have "general@2"
+
+//In order for a command to show up as a button next to the editor tabs, it must be in the "editor/title" menu
+//The associated command must have a defined icon, and its group must be "navigation"
+
+
 // The module 'vscode' contains the VS Code extensibility API
 import { File } from 'buffer';
 import { exec } from 'child_process';
