@@ -15,18 +15,6 @@
 //The associated command must have a defined icon, and its group must be "navigation"
 
 
-// ,
-// "configuration": {
-// 	"title": "Beyond Compare",
-// 	"properties": {
-// 	"bcompare-vscode.skipDefaultCompareTool": {
-// 		"type": "boolean",
-// 		"default": false,
-// 		"description": "Controls whether Beyond Compare is used instead of the built-in Diff Editor for standard comparison commands."
-// 	}
-// 	}
-// }
-
 
 // The module 'vscode' contains the VS Code extensibility API
 import { File } from 'buffer';
@@ -63,21 +51,24 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}); 
 
-	// vscode.window.tabGroups.onDidChangeTabs(event => {
-	// 	if(event.opened.length >= 1 && vscode.workspace.getConfiguration("bcompare-vscode").skipDefaultCompareTool)
-	// 	{
-	// 		event.opened.forEach((tab) => {
-	// 			try //Try-catch in case another extension messes with things first
-	// 			{
-	// 				if(tab.input instanceof vscode.TabInputTextDiff)
-	// 				{	
-	// 					openFromDiffHelper(tab.input);
-	// 					vscode.window.tabGroups.close(tab);
-	// 				}
-	// 			}catch(e){}
-	// 		});
-	// 	}
-	// });
+	vscode.window.tabGroups.onDidChangeTabs(event => {
+		if(event.opened.length >= 1 /*&& vscode.workspace.getConfiguration("bcompare-vscode").skipDefaultCompareTool*/)
+		{
+			event.opened.forEach((tab) => {
+				try //Try-catch in case another extension messes with things first
+				{
+					if(tab.input instanceof vscode.TabInputTextDiff)
+					{
+						if(tab.input.modified.scheme === "file" && tab.input.original.scheme === "file")
+						{	
+							openFromDiffHelper(tab.input);
+							vscode.window.tabGroups.close(tab);
+						}
+					}
+				}catch(e){}
+			});
+		}
+	});
 
 
 	registerCommand('.selectLeft', (a) => 
@@ -520,7 +511,15 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(tab.input instanceof vscode.TabInputTextDiff)
 		{
-			openFromDiffHelper(tab.input);
+			if(tab.input.modified.scheme === "file" && tab.input.original.scheme === "file")
+			{
+				openFromDiffHelper(tab.input);
+			}else
+			{
+				//Error-virtual files
+				vscode.window.showErrorMessage("Error: Can not open a comparison unless both files are stored on the disk");
+				return;
+			}
 		}else
 		{
 			//Error-not a diff tab

@@ -376,7 +376,17 @@
         "key": "alt+shift+v",
         "when": "editorFocus && editorHasSelection"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Beyond Compare",
+      "properties": {
+      "bcompare-vscode.skipDefaultCompareTool": {
+        "type": "boolean",
+        "default": false,
+        "description": "Controls whether Beyond Compare is used instead of the built-in Diff Editor for standard comparison commands."
+      }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
