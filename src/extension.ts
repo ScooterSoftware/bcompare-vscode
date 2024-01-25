@@ -28,13 +28,10 @@
 // }
 
 
-// The module 'vscode' contains the VS Code extensibility API
-import { File } from 'buffer';
 import { exec } from 'child_process';
-import { ReadableStreamDefaultController } from 'stream/web';
 import * as vscode from 'vscode';
-import fs, { open, read } from 'fs';
-import { simpleGit, SimpleGit, CleanOptions } from 'simple-git';
+import fs from 'fs';
+import { simpleGit} from 'simple-git';
 import * as path from 'path';
 import * as vsWinReg from '@vscode/windows-registry';
 import * as os from 'node:os';
