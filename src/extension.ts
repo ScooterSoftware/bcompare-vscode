@@ -972,7 +972,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let extension : string;
 			try
 			{
-				extension = path.extname(tabInput.original.fsPath);
+				extension = path.extname(tabInput.original.path);
 			}catch
 			{
 				extension = ".txt";
@@ -992,7 +992,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let extension : string;
 			try
 			{
-				extension = path.extname(tabInput.modified.fsPath);
+				extension = path.extname(tabInput.modified.path);
 			}catch
 			{
 				extension = ".txt";
