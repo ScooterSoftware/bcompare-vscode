@@ -963,10 +963,35 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function openFromDiffHelper(tabInput : vscode.TabInputTextDiff)
 	{
-		let rightFilePath = tabInput.modified.fsPath;
-		let leftFilePath = tabInput.original.fsPath;
+		let rightFilePath : string;
+		let leftFilePath : string;
 		let options = "";
-		
+
+		if(tabInput.original.scheme !== "file")
+		{
+			let leftFileContent = await vscode.workspace.fs.readFile(tabInput.original);
+			leftFilePath = path.join(os.tmpdir(), rndName() + ".txt");
+			vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
+			temporaryFiles.push(leftFilePath);
+			options += " -lro";
+		}else
+		{
+			leftFilePath = tabInput.original.fsPath;
+		}
+
+		if(tabInput.modified.scheme !== "file")
+		{
+			let rightFileContent = await vscode.workspace.fs.readFile(tabInput.modified);
+			rightFilePath = path.join(os.tmpdir(), rndName() + ".txt");
+			vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
+			temporaryFiles.push(rightFilePath);
+			options += " -rro";
+		}else
+		{
+			rightFilePath = tabInput.modified.fsPath;
+		}
+
+		/*
 		if(tabInput.original.scheme === "git")
 		{
 			let gitFilePath = await gitCompareHelper(leftFilePath, "HEAD:./");
@@ -998,6 +1023,7 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 		}
+		*/
 
 		openBC(options, leftFilePath, rightFilePath);
 	}
