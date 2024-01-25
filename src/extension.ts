@@ -59,7 +59,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					if(tab.input instanceof vscode.TabInputTextDiff)
 					{
-						if(tab.input.modified.scheme === "file" && tab.input.original.scheme === "file")
+						if(isFileOrGit(tab.input))
 						{	
 							openFromDiffHelper(tab.input);
 							vscode.window.tabGroups.close(tab);
@@ -511,7 +511,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(tab.input instanceof vscode.TabInputTextDiff)
 		{
-			if(tab.input.modified.scheme === "file" && tab.input.original.scheme === "file")
+			if(isFileOrGit(tab.input))
 			{
 				openFromDiffHelper(tab.input);
 			}else
@@ -1002,6 +1002,21 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		openBC(options, leftFilePath, rightFilePath);
+	}
+
+	function isFileOrGit(input : vscode.TabInputTextDiff) : boolean
+	{
+		if(!(input.modified.scheme === "file" || input.modified.scheme === "git"))
+		{
+			return false;
+		}
+
+		if(!(input.original.scheme === "file" || input.original.scheme === "git"))
+		{
+			return false;
+		}
+
+		return true;
 	}
 }
 
