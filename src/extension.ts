@@ -969,9 +969,17 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(tabInput.original.scheme !== "file")
 		{
+			let extension : string;
+			try
+			{
+				extension = path.extname(tabInput.original.fsPath);
+			}catch
+			{
+				extension = ".txt";
+			}
 			let leftFileContent = await vscode.workspace.fs.readFile(tabInput.original);
-			leftFilePath = path.join(os.tmpdir(), rndName() + ".txt");
-			vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
+			leftFilePath = path.join(os.tmpdir(), rndName() + extension);
+			await vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
 			temporaryFiles.push(leftFilePath);
 			options += " -lro";
 		}else
@@ -981,9 +989,17 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(tabInput.modified.scheme !== "file")
 		{
+			let extension : string;
+			try
+			{
+				extension = path.extname(tabInput.modified.fsPath);
+			}catch
+			{
+				extension = ".txt";
+			}
 			let rightFileContent = await vscode.workspace.fs.readFile(tabInput.modified);
-			rightFilePath = path.join(os.tmpdir(), rndName() + ".txt");
-			vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
+			rightFilePath = path.join(os.tmpdir(), rndName() + extension);
+			await vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
 			temporaryFiles.push(rightFilePath);
 			options += " -rro";
 		}else
