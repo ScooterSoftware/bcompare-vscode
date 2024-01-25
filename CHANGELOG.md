@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.4
+
+- The Open Compare button found in VS Code's default compare tool now propperly opens more types of files
+
 ## 1.0.3
 
 - Removed the setting to automatically open Beyond Compare instead of VS Code's default compare tool. The button to open a comparison in BC is still available.
