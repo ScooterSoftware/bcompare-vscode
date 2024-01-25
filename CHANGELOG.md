@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.5
+
+- Fixed an error that broke the README file when viewed on the marketplace
+
 ## 1.0.4
 
 - The Open Compare button found in VS Code's default compare tool now properly opens more types of files
