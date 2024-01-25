@@ -21,7 +21,7 @@
 // 	"properties": {
 // 	"bcompare-vscode.skipDefaultCompareTool": {
 // 		"type": "boolean",
-// 		"default": "false",
+// 		"default": false,
 // 		"description": "Controls whether Beyond Compare is used instead of the built-in Diff Editor for standard comparison commands."
 // 	}
 // 	}
