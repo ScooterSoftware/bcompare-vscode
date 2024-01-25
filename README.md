@@ -15,8 +15,8 @@ This extension allows you to open Beyond Compare directly from VSCode in several
     - [Compare selected](#compare-selected)
     - [Compare to clipboard](#compare-to-clipboard)
     - [Open Beyond Compare from Diff Editor](#open-beyond-compare-from-diff-editor)
-- [Settings](#settings)
-    - [Replace Diff Editor](#replace-diff-editor)
+<!-- - [Settings](#settings)
+    - [Replace Diff Editor](#replace-diff-editor) -->
 - [Requirements](#requirements)
 
 ---
@@ -88,14 +88,14 @@ Use this button when you have a comparison open in VSCode to open it in Beyond C
 
 ![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
 
-There is also a [setting](#settings) to automatically open BC whenever a comparison is opened.
+<!-- There is also a [setting](#settings) to automatically open BC whenever a comparison is opened. -->
 
-## Settings
+<!-- ## Settings
 
 ### Replace Diff Editor
 Use this setting to skip VSCode's built-in Diff Editor and go straight to Beyond Compare.
 
-![Replace Diff Editor](images/AutoOpenBCSetting.PNG)
+![Replace Diff Editor](images/AutoOpenBCSetting.PNG) -->
 
 ## Requirements
 

@@ -2,7 +2,7 @@
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare",
   "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "ScooterSoftware",
   "contributors": [
     "Cal Shucha",
@@ -376,17 +376,7 @@
         "key": "alt+shift+v",
         "when": "editorFocus && editorHasSelection"
       }
-    ],
-    "configuration": {
-      "title": "Beyond Compare",
-      "properties": {
-        "bcompare-vscode.skipDefaultCompareTool": {
-          "type": "boolean",
-          "default": "false",
-          "description": "Controls whether Beyond Compare is used instead of the built-in Diff Editor for standard comparison commands."
-        }
-      }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",

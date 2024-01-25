@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.3
+
+- Removed the setting to automatically open Beyond Compare instead of VS Code's default compare tool. The button to open a comparison in BC is still available.
+
 ## 1.0.2
 
 - Added options to compare files or highlighted text to your clipboard
