@@ -61,7 +61,7 @@
       {
         "command": "bcompare-vscode.selectLeftFolder",
         "title": "Select Left Folder",
-        "catagory": "Beyond Compare"
+        "category": "Beyond Compare"
       },
       {
         "command": "bcompare-vscode.compareWithLeftFolder",

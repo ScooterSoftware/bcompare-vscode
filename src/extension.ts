@@ -2,7 +2,7 @@
 //To have full control of the order, all items in a menu should have a defined group
 //Note: the group is defined in package.json for each individual menu, not within the section where commands are defined
 //Items with the same group string will show up in the same "group" with groups divided by black bars
-//Gropus will be added to the menu alphabetically
+//Groups will be added to the menu alphabetically
 //Group names aren't visible to the user (as far as I can tell), so they can be anything
 //By default, menu items will be ordered alphabetically by command/submenu name
 //To choose the order in which items appear, add "@#" to the end of the group string with # being the command's position in the menu
@@ -44,6 +44,7 @@ let globalState : vscode.Memento;
 export function activate(context: vscode.ExtensionContext) {
 
 	let blnLeftReadOnly = false;
+	let strLeftLabel = "";
 	let BCPath: string | undefined = 'bcompare';
 	const strOS = os.platform();
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
@@ -97,7 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}else
 			{
 				let filePath = copyRemoteFileAsTemp(a);
-				writeLeftPath(await filePath, true);
+				writeLeftPath(await filePath, true, a.fsPath);
 				success = true;
 				leftFileName = a.fsPath;
 			}
@@ -119,7 +120,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}else
 		{
 			let filePath = copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.uri);
-			writeLeftPath(await filePath, true);
+			writeLeftPath(await filePath, true, vscode.window.activeTextEditor.document.uri.fsPath);
 			success = true;
 			leftFileName = vscode.window.activeTextEditor.document.fileName;
 		}
@@ -137,6 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		let rightPath = "";
 		let blnRRO : boolean = false;
+		let rightLabel = "";
 		if(a)
 		{
 			if(a.scheme === "file")
@@ -150,6 +152,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}else
 			{
 				rightPath = await copyRemoteFileAsTemp(a);
+				rightLabel = a.fsPath;
 				blnRRO = true;
 			}
 			
@@ -170,6 +173,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}else
 		{
 			rightPath = await copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.uri);
+			rightLabel = vscode.window.activeTextEditor.document.uri.fsPath;
 			blnRRO = true;
 		}
 
@@ -185,7 +189,7 @@ export function activate(context: vscode.ExtensionContext) {
 				option += " -rro";
 			}
 			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
-			openBC(option, leftPath, rightPath);
+			openBC(option, [strLeftLabel, rightLabel], leftPath, rightPath);
 			clearLeftPath();
 		}
 	});
@@ -223,7 +227,7 @@ export function activate(context: vscode.ExtensionContext) {
 		if(rightPath !== "")
 		{
 			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
-			openBC("", leftPath, rightPath);
+			openBC("", ["",""], leftPath, rightPath);
 			clearLeftPath();
 		}
 	});
@@ -268,7 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
 				options += " -rro";
 			}
 
-			openBC(options, aFile, compFile);
+			openBC(options, [a.fsPath, file[0].fsPath], aFile, compFile);
 		});
 	});
 
@@ -360,13 +364,13 @@ export function activate(context: vscode.ExtensionContext) {
 				folderPath += "\\" + splitPath[intI];
 			}
 
-			openBC("", folderPath ,folder[0].fsPath);
+			openBC("", ["",""], folderPath ,folder[0].fsPath);
 		});
 	});
 
 	registerCommand('.compareWithSave', async (a) =>
 	{
-		if(!a)//If not run by right clicking on an editor tab (when run from command pallate or keybinding)
+		if(!a)//If not run by right clicking on an editor tab (when run from command palette or keybinding)
 		{
 			if(!vscode.window.activeTextEditor)
 			{
@@ -426,7 +430,7 @@ export function activate(context: vscode.ExtensionContext) {
 				firstLoop = false;
 			}
 
-			if(aEditor === undefined)//If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message, or a bug occours)
+			if(aEditor === undefined)//If unsuccessful, give up (shouldn't happen unless the user closes the editor before clicking on "yes" on the "are you sure" message, or a bug occurs)
 			{
 				vscode.window.showErrorMessage("Error: couldn't find that file");
 				return;
@@ -477,7 +481,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
 		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
 		temporaryFiles.push(tempPath);
-		writeLeftPath(fs.realpathSync(tempPath), true);
+		writeLeftPath(fs.realpathSync(tempPath), true, "Left Text");
 		vscode.window.showInformationMessage("Highlighted section selected as left file");
 	});
 
@@ -506,7 +510,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
-		openBC(options, leftPath, rightPath);
+		openBC(options, [strLeftLabel, "Right Text"], leftPath, rightPath);
 		clearLeftPath();
 	});
 
@@ -536,7 +540,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(fs.existsSync(a.resourceUri.fsPath) && case5Head)
 				{
-					openBC("-lro", case5Head, a.resourceUri.fsPath);
+					openBC("-lro", ["",""], case5Head, a.resourceUri.fsPath);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -549,7 +553,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(case0Head && case0Staged)
 				{
-					openBC("-ro", case0Head, case0Staged);
+					openBC("-ro", ["",""], case0Head, case0Staged);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -596,7 +600,8 @@ export function activate(context: vscode.ExtensionContext) {
 	registerCommand('.compareFileToClipboard', async (a) =>
 	{
 		let options = "-rro";
-		let comparePath = "";
+		let comparePath : string = "";
+		let fileLabel : string = "";
 		if(a)
 		{
 			if(a.scheme === 'untitled')
@@ -611,6 +616,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				comparePath = await copyRemoteFileAsTemp(a);
 				options += " -lro";
+				fileLabel = verifyIsString(a.fsPath);
 			}
 			
 		}else if(!vscode.window.activeTextEditor)
@@ -629,6 +635,7 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			comparePath = await copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.uri);
 			options += " -lro";
+			fileLabel = verifyIsString(vscode.window.activeTextEditor?.document?.fileName);
 		}
 
 		if(comparePath !== "")
@@ -636,10 +643,10 @@ export function activate(context: vscode.ExtensionContext) {
 			let clipboardPath = await saveClipboardToFile();
 			if(clipboardPath === false)
 			{
-				vscode.window.showErrorMessage("Error: Clipboard does not conatin readable text");
+				vscode.window.showErrorMessage("Error: Clipboard does not contain readable text");
 			}else
 			{
-				openBC(options, comparePath, clipboardPath);
+				openBC(options, [fileLabel, "Clipboard Contents"], comparePath, clipboardPath);
 			}
 		}
 	});
@@ -666,10 +673,10 @@ export function activate(context: vscode.ExtensionContext) {
 			let clipboardPath = await saveClipboardToFile();
 			if(clipboardPath === false)
 			{
-				vscode.window.showErrorMessage("Error: Clipboard does not conatin readable text");
+				vscode.window.showErrorMessage("Error: Clipboard does not contain readable text");
 			}else
 			{
-				openBC("-ro", comparePath, clipboardPath);
+				openBC("-ro", ["Highlighted Text", "Clipboard Contents"], comparePath, clipboardPath);
 			}
 		}else
 		{//Should never happen
@@ -679,7 +686,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.launchBC', () => 
 	{
-		openBC("");
+		openBC("",[]);
 	});
 
 	async function compareSelected(a: any[])
@@ -777,7 +784,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let editPath = promise.fsPath;
 
-		openBC("-ro", filePath, editPath);
+		openBC("-ro", ["Saved Version", "Edited Version"], filePath, editPath);
 
 		temporaryFiles.push(editPath);
 	}
@@ -788,7 +795,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let fileName = path.basename(strPath);
 		let filePath: string | false = false;
 
-		await simpleGit(directory).outputHandler((_comand: any, standardOut: any) => 
+		await simpleGit(directory).outputHandler((_command: any, standardOut: any) => 
 		{
 			filePath = path.join(os.tmpdir(), rndName() + path.extname(strPath));
 			const writeStream = fs.createWriteStream(filePath);
@@ -874,13 +881,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	async function openBC(options: string = "", ...files: string[])
+	async function openBC(options: string = "", names : string[], ...files: string[])
 	{
 		readRegistry();//Update path to BC (if on windows)
 
-		if(files.length > 4)//Shouldn't ever be true
+		if(files.length > 4 || files.length > names.length)//Shouldn't ever be true
 		{
-			//Error: too many files
+			//Error: too many files or not enough names
 			vscode.window.showErrorMessage("Error: Can't open that many files in a comparison");
 			return;
 		}
@@ -891,7 +898,15 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			cmd += "\"" + files[file] + "\" ";
 		}
-		
+
+		for(let i = 0; i < files.length, i++;)
+		{
+			if(names[i] !== "")
+			{
+				options += " -title" + i + "=\"" + names[i] + "\"";
+			}
+		}
+
 		cmd += options;
 
 		//Clear left file/folder
@@ -1010,7 +1025,7 @@ export function activate(context: vscode.ExtensionContext) {
 		return true;
 	}
 
-	function writeLeftPath(strPath : string, blnTempFile : boolean = false)
+	function writeLeftPath(strPath : string, blnTempFile : boolean = false, strNewLeftName : string = "")
 	{
 		leftPath = strPath;
 		
@@ -1024,9 +1039,11 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		blnLeftReadOnly = blnTempFile;
+		strLeftLabel = strNewLeftName;
 
 		globalState.update("leftPath", strPath);
 		globalState.update("leftIsPreserved", blnTempFile);
+		globalState.update("leftName", strLeftLabel);
 	}
 
 	function readLeftPath()
@@ -1034,6 +1051,7 @@ export function activate(context: vscode.ExtensionContext) {
 		//Read path
 		let readFilePath : string = verifyIsString(globalState.get("leftPath"));
 		let leftPreserved = globalState.get("leftIsPreserved");
+		let leftName : string = verifyIsString(globalState.get("leftName"));
 
 		if(leftPreserved) //Check if path was a temp file that was preserved
 		{
@@ -1042,7 +1060,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 
-		if(readFilePath === '' || !fs.existsSync(readFilePath))//No left item or left item was deleted
+		if(readFilePath === '' || !fs.existsSync(readFilePath))//No left item or left item was deleted/is inaccessible
 		{
 			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
@@ -1058,6 +1076,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		leftPath = readFilePath;
+		strLeftLabel = leftName;
 	}
 
 	function clearLeftPath()
@@ -1074,6 +1093,8 @@ export function activate(context: vscode.ExtensionContext) {
 		let rightFilePath : string;
 		let leftFilePath : string;
 		let options = "";
+		let leftLabel = "";
+		let rightLabel = "";
 
 		if(tabInput.original.scheme !== "file")
 		{
@@ -1090,6 +1111,7 @@ export function activate(context: vscode.ExtensionContext) {
 			await vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
 			temporaryFiles.push(leftFilePath);
 			options += " -lro";
+			leftLabel = tabInput.original.fsPath;
 		}else
 		{
 			leftFilePath = tabInput.original.fsPath;
@@ -1110,12 +1132,13 @@ export function activate(context: vscode.ExtensionContext) {
 			await vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
 			temporaryFiles.push(rightFilePath);
 			options += " -rro";
+			rightLabel = tabInput.modified.fsPath;
 		}else
 		{
 			rightFilePath = tabInput.modified.fsPath;
 		}
 
-		openBC(options, leftFilePath, rightFilePath);
+		openBC(options, [leftLabel, rightLabel], leftFilePath, rightFilePath);
 	}
 
 	async function copyRemoteFileAsTemp(a : any) : Promise<string>
