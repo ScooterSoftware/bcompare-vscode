@@ -2,7 +2,7 @@
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare",
   "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "publisher": "ScooterSoftware",
   "contributors": [
     "Cal Shucha",
@@ -38,6 +38,7 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "extensionKind": ["ui"],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -161,7 +162,7 @@
       "editor/title/context": [
         {
           "submenu": "editorTitleContextCompare",
-          "when": "resourceScheme == file && !sideBySideEditorActive"
+          "when": "!sideBySideEditorActive && isFileSystemResource"
         }
       ],
       "editorTitleContextCompare": [
@@ -199,7 +200,7 @@
       "explorer/context": [
         {
           "submenu": "explorerContextCompare",
-          "when": "listMultiSelection === false"
+          "when": "listMultiSelection === false && !(resourceScheme === vscode-remote && explorerResourceIsFolder)"
         },
         {
           "submenu": "explorerMultiContextCompare",
@@ -229,7 +230,7 @@
         },
         {
           "command": "bcompare-vscode.compareParent",
-          "when": "explorerResourceIsFolder === false",
+          "when": "explorerResourceIsFolder === false && resourceScheme !== vscode-remote",
           "group": "2general@3"
         },
         {
@@ -249,17 +250,17 @@
         },
         {
           "command": "bcompare-vscode.selectLeftFolder",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && resourceScheme !== vscode-remote",
           "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithLeftFolder",
-          "when": "explorerResourceIsFolder && bcompare-vscode.leftFolderSelected",
+          "when": "explorerResourceIsFolder && bcompare-vscode.leftFolderSelected && resourceScheme !== vscode-remote",
           "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithFolder",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && resourceScheme !== vscode-remote",
           "group": "2general@2"
         }
       ],
@@ -288,7 +289,7 @@
       "scm/resourceState/context": [
         {
           "command": "bcompare-vscode.gitCompare",
-          "when": "scmProvider == git"
+          "when": "scmProvider == git && resourcePath =~ /./"
         }
       ],
       "editor/title": [

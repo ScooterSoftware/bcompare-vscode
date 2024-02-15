@@ -77,25 +77,33 @@ export function activate(context: vscode.ExtensionContext) {
 	// });
 
 
-	registerCommand('.selectLeft', (a) => 
+	registerCommand('.selectLeft', async (a) =>
 	{
 		let success = false;
+		let leftFileName : string = "";
 		if(a)
 		{
-			if(a.scheme === 'untitled')
+			//vscode.window.showInformationMessage(a.scheme);
+			if(a.scheme === "vscode-remote")
+			{
+				let filePath = copyRemoteFileAsTemp(a);
+				writeLeftPath(await filePath, true);
+				success = true;
+				leftFileName = a.fsPath;
+			}else if(a.scheme === "file")
+			{
+				writeLeftPath(a.fsPath);
+				success = true;
+				leftFileName = a.fsPath;
+			}else if(a.scheme === 'untitled')
 			{
 				//Error untitled
 				vscode.window.showErrorMessage(
 					"Error: Can not compare to " + a.fsPath + " until it is saved");
-			}else if(a.scheme !== "file")
+			}else
 			{
 				//Error not a file
 				vscode.window.showErrorMessage("Error: Can not compare that");
-			}else
-			{
-				leftPath = a.fsPath;
-				writeLeftPath(a.fsPath);
-				success = true;
 			}
 			
 		}else if(!vscode.window.activeTextEditor)
@@ -107,39 +115,50 @@ export function activate(context: vscode.ExtensionContext) {
 			//Error untitled
 			vscode.window.showErrorMessage(
 				"Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
+		}else if(vscode.window.activeTextEditor.document.uri.scheme === "vscode-remote")
+		{
+			let filePath = copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.uri);
+			writeLeftPath(await filePath, true);
+			success = true;
+			leftFileName = vscode.window.activeTextEditor.document.fileName;
 		}else
 		{
-			leftPath = vscode.window.activeTextEditor.document.fileName;
-			writeLeftPath(leftPath);
+			writeLeftPath(vscode.window.activeTextEditor.document.fileName);
 			success = true;
+			leftFileName = vscode.window.activeTextEditor.document.fileName;
 		}
 		
 		if(success)
 		{
 			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
 			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
-			blnLeftReadOnly = false;
-			vscode.window.showInformationMessage("Marked \"" + path.basename(leftPath) + "\" as left file");
+			
+			vscode.window.showInformationMessage("Marked \"" + leftFileName + "\" as left file");
 		}
 	});
 
-	registerCommand('.compareWithLeft', (a) =>
+	registerCommand('.compareWithLeft', async (a) =>
 	{
 		let rightPath = "";
+		let blnRRO : boolean = false;
 		if(a)
 		{
-			if(a.scheme === 'untitled')
+			if(a.scheme === "vscode-remote")
+			{
+				rightPath = await copyRemoteFileAsTemp(a);
+				blnRRO = true;
+			}else if(a.scheme === "file")
+			{
+				rightPath = a.fsPath;
+			}else if(a.scheme === 'untitled')
 			{
 				//Error untitled
 				vscode.window.showErrorMessage(
 					"Error: Can not compare to " + a.fsPath + " until it is saved");
-			}else if(a.scheme !== "file")
+			}else
 			{
 				//Error not a file
 				vscode.window.showErrorMessage("Error: Can not compare that");
-			}else
-			{
-				rightPath = a.fsPath;
 			}
 			
 		}else if(!vscode.window.activeTextEditor)
@@ -153,6 +172,10 @@ export function activate(context: vscode.ExtensionContext) {
 				"Error: Can not compare to " + 
 				vscode.window.activeTextEditor.document.fileName + 
 				" until it is saved");
+		}else if(vscode.window.activeTextEditor.document.uri.scheme === "vscode-remote")
+		{
+			rightPath = await copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.uri);
+			blnRRO = true;
 		}else
 		{
 			rightPath = vscode.window.activeTextEditor.document.fileName;
@@ -165,6 +188,10 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				option = "-lro";
 			}
+			if(blnRRO)
+			{
+				option += " -rro";
+			}
 			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 			openBC(option, leftPath, rightPath);
 			clearLeftPath();
@@ -175,7 +202,6 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		if(a)
 		{
-			leftPath = a.fsPath;
 			writeLeftPath(a.fsPath);
 		}else
 		{
@@ -221,13 +247,22 @@ export function activate(context: vscode.ExtensionContext) {
 		};
 
 		let promise = vscode.window.showOpenDialog(options);
-		promise.then((file) =>
+		promise.then( async (file) =>
 		{
 			if(file === undefined)
 			{
-				return;
+				return;//Cancel selected
 			}
-			openBC("", a.fsPath, file[0].fsPath);
+
+			if(a.scheme === "file")
+			{
+				openBC("", a.fsPath, file[0].fsPath);
+			}else if(a.scheme === "vscode-remote")
+			{
+				let aFile = await copyRemoteFileAsTemp(a);
+				let compFile = await copyRemoteFileAsTemp(file[0]);
+				openBC("-ro", aFile, compFile);
+			}
 		});
 	});
 
@@ -325,6 +360,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.compareWithSave', async (a) =>
 	{
+		let x = vscode.window.activeTextEditor?.document.uri;
 		if(!a)//If not run by right clicking on an editor tab (when run from command pallate or keybinding)
 		{
 			if(!vscode.window.activeTextEditor)
@@ -335,13 +371,18 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				let fileName = vscode.window.activeTextEditor.document.fileName;
 				let splitPath = fileName.split('\\');
-				if(!fs.existsSync(fileName))
-				{
+				if(vscode.window.activeTextEditor.document.isUntitled)
+				{//No version on disk
 					vscode.window.showErrorMessage(
 						"Error: \"" + splitPath[splitPath.length - 1] + "\" has no saved version to compare to");
 					return;
 				}else //and it has a saved version
 				{
+					if(vscode.window.activeTextEditor.document.uri.scheme === "vscode-remote")
+					{
+						fileName = await copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.uri);
+					}
+
 					if(!vscode.window.activeTextEditor.document.isDirty)//If it hasn't changed, ask for confirmation
 					{
 						vscode.window.showWarningMessage(
@@ -359,11 +400,11 @@ export function activate(context: vscode.ExtensionContext) {
 					compareWithSaveHelper(fileName, vscode.window.activeTextEditor.document);//If it hasn't changed, compare
 				}
 			}
-		}else if(!fs.existsSync(a.fsPath))
+		}/*else if(!fs.existsSync(a.fsPath))
 		{
 			vscode.window.showErrorMessage("Error: \"" + path.basename(a.path) + "\" has no saved version to compare to");
 			return;
-		}else //If it is run by right clicking an editor tab
+		}*/else //If it is run by right clicking an editor tab
 		{
 			let aEditor: vscode.TextDocument | undefined;
 			let startingTab = vscode.window.tabGroups.activeTabGroup.activeTab;
@@ -379,7 +420,7 @@ export function activate(context: vscode.ExtensionContext) {
 						aEditor = vscode.window.activeTextEditor.document;
 					}
 				}
-				await vscode.commands.executeCommand("workbench.action.nextEditor");
+				if(!firstLoop || aEditor === undefined){await vscode.commands.executeCommand("workbench.action.nextEditor");}
 				firstLoop = false;
 			}
 
@@ -389,9 +430,19 @@ export function activate(context: vscode.ExtensionContext) {
 				return;
 			}
 
+			let aPath : string = "";
+
+			if(a.scheme === "vscode-remote")
+			{
+				aPath = await copyRemoteFileAsTemp(a);
+			}else
+			{
+				aPath = a.fsPath;
+			}
+
 			if(aEditor.isDirty)
 			{
-				compareWithSaveHelper(a.fsPath, aEditor);
+				compareWithSaveHelper(aPath, aEditor);
 			}else
 			{
 				vscode.window.showWarningMessage("\"" + path.basename(a.path) + 
@@ -399,7 +450,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					if(answer === "Yes" && aEditor !== undefined)
 					{
-						compareWithSaveHelper(a.fsPath, aEditor);
+						compareWithSaveHelper(aPath, aEditor);
 					}
 				});
 				return;
@@ -424,9 +475,7 @@ export function activate(context: vscode.ExtensionContext) {
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
 		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
 		temporaryFiles.push(tempPath);
-		leftPath = fs.realpathSync(tempPath);
-		writeLeftPath(leftPath, true);
-		blnLeftReadOnly = true;
+		writeLeftPath(fs.realpathSync(tempPath), true);
 		vscode.window.showInformationMessage("Highlighted section selected as left file");
 	});
 
@@ -461,6 +510,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.gitCompare', async (a) => 
 	{
+		if(a.type === undefined)
+		{
+			//Error: git compare doesn't work when remote
+			vscode.window.showErrorMessage("Error: unable to read from git");
+		}
+
 		switch(a.type)
 		{
 			case 1:
@@ -492,7 +547,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(case0Head && case0Staged)
 				{
-					openBC("-ro", case0Staged, case0Head);
+					openBC("-ro", case0Head, case0Staged);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -546,13 +601,16 @@ export function activate(context: vscode.ExtensionContext) {
 				//Error untitled
 				vscode.window.showErrorMessage(
 					"Error: Can not compare to " + a.fsPath + " until it is saved");
-			}else if(a.scheme !== "file")
+			}else if(a.scheme === "file")
+			{
+				comparePath = a.fsPath;
+			}else if(a.scheme === "vscode-remote")
+			{
+				comparePath = await copyRemoteFileAsTemp(a.fsPath);
+			}else
 			{
 				//Error not a file
 				vscode.window.showErrorMessage("Error: Can not compare that");
-			}else
-			{
-				comparePath = a.fsPath;
 			}
 			
 		}else if(!vscode.window.activeTextEditor)
@@ -564,6 +622,9 @@ export function activate(context: vscode.ExtensionContext) {
 			//Error untitled
 			vscode.window.showErrorMessage(
 				"Error: Can not compare to " + vscode.window.activeTextEditor.document.fileName + " until it is saved");
+		}else if(vscode.window.activeTextEditor.document.uri.scheme === "vscode-remote")
+		{
+			comparePath = await copyRemoteFileAsTemp(vscode.window.activeTextEditor.document.fileName);
 		}else
 		{
 			comparePath = vscode.window.activeTextEditor.document.fileName;
@@ -620,7 +681,7 @@ export function activate(context: vscode.ExtensionContext) {
 		openBC("");
 	});
 
-	function compareSelected(a: any[])
+	async function compareSelected(a: any[])
 	{
 		const items = a[1];
 		if(items.length === 2)
@@ -628,10 +689,45 @@ export function activate(context: vscode.ExtensionContext) {
 			//Two objects for compare - make sure both are files or both are folders
 			let fileLeft = items[0].fsPath;
 			let fileRight = items[1].fsPath;
+			let leftIsFile : boolean;
+			let rightIsFile : boolean;
 
-			if(fs.statSync(fileLeft).isFile() === fs.statSync(fileRight).isFile())
+			try//Vscode does not provide a method to check if a resource is a file, so this is what I have to do
 			{
-				openBC("", fileLeft, fileRight);
+				await vscode.workspace.fs.readFile(items[0]);
+				leftIsFile = true;
+			}catch
+			{
+				leftIsFile = false;
+			}
+			try
+			{
+				await vscode.workspace.fs.readFile(items[1]);
+				rightIsFile = true;
+			}catch
+			{
+				rightIsFile = false;
+			}
+
+			if(leftIsFile === rightIsFile)
+			{
+				let options = "";
+				if((items[0].scheme === "vscode-remote"))//If the item is remote
+				{	
+					if(!leftIsFile)//No folders
+					{
+						vscode.window.showErrorMessage("The comparison of remote folders is not currently supported");
+						return;
+					}else
+					{
+						fileLeft = await copyRemoteFileAsTemp(items[0]);
+						fileRight = await copyRemoteFileAsTemp(items[1]);
+						options = "-ro";
+					}
+				}
+				
+				openBC(options, fileLeft, fileRight);
+				
 			}else
 			{
 				//Error: Can't compare files to directories
@@ -672,7 +768,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		let editPath = promise.fsPath;
 
-		openBC("-rro", filePath, editPath);
+		openBC("-ro", filePath, editPath);
 
 		temporaryFiles.push(editPath);
 	}
@@ -907,6 +1003,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function writeLeftPath(strPath : string, blnTempFile : boolean = false)
 	{
+		leftPath = strPath;
+		
 		if(globalState.get("leftIsPreserved"))//If the current left path is a temp file
 		{
 			let globalLeft = verifyIsString(globalState.get("leftPath"));
@@ -915,6 +1013,8 @@ export function activate(context: vscode.ExtensionContext) {
 				temporaryFiles.push(globalLeft);//Add it
 			}
 		}
+
+		blnLeftReadOnly = blnTempFile;
 
 		globalState.update("leftPath", strPath);
 		globalState.update("leftIsPreserved", blnTempFile);
@@ -955,7 +1055,6 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
 		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
-		leftPath = "";
 
 		writeLeftPath("");
 		globalState.update("leftIsPreserved", false);
@@ -1042,6 +1141,16 @@ export function activate(context: vscode.ExtensionContext) {
 		*/
 
 		openBC(options, leftFilePath, rightFilePath);
+	}
+
+	async function copyRemoteFileAsTemp(a : any) : Promise<string>
+	{
+		let fileContent = await vscode.workspace.fs.readFile(a);
+		let extension = path.extname(a.fsPath);
+		let filePath = path.join(os.tmpdir(), rndName() + extension);
+		await vscode.workspace.fs.writeFile(vscode.Uri.file(filePath), fileContent);
+		temporaryFiles.push(filePath);
+		return filePath;
 	}
 }
 
