@@ -185,6 +185,7 @@
         },
         {
           "command": "bcompare-vscode.compareParent",
+          "when": "resourceScheme === file",
           "group": "2general@3"
         },
         {
@@ -230,7 +231,7 @@
         },
         {
           "command": "bcompare-vscode.compareParent",
-          "when": "explorerResourceIsFolder === false && resourceScheme !== vscode-remote",
+          "when": "explorerResourceIsFolder === false && resourceScheme === file",
           "group": "2general@3"
         },
         {
