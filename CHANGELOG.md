@@ -3,7 +3,7 @@
 ## 1.0.6
 
 - Comparing files in a remote workspace will now open temporary files in BC on the computer you're using rather than opening the files on the one you're accessing
-- Virtual files will now be copied into temporary files and should be compared propperly
+- Virtual files will now be copied into temporary files and should be compared properly
 - When comparing a staged file to the git head, the modified version now appears on the right rather than the left
 
 ## 1.0.5
