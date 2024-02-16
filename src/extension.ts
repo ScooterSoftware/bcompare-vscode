@@ -1114,6 +1114,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let leftLabel = "";
 		let rightLabel = "";
 
+
 		if(tabInput.original.scheme !== "file")
 		{
 			let extension : string;
@@ -1124,9 +1125,37 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				extension = ".txt";
 			}
-			let leftFileContent = await vscode.workspace.fs.readFile(tabInput.original);
+
 			leftFilePath = path.join(os.tmpdir(), rndName() + extension);
-			await vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
+
+			try
+			{
+				let leftFileContent = await vscode.workspace.fs.readFile(tabInput.original);
+				await vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
+			}catch
+			{
+				let visibleEditors = vscode.window.visibleTextEditors;
+				let x = typeof visibleEditors[0].document.uri;
+				for(let i = 0; i < visibleEditors.length; i++)
+				{
+					if(visibleEditors[i].document.uri.query === tabInput.original.query)
+					{
+						let text = visibleEditors[i].document.getText();
+						let x = typeof text;
+						if(typeof text === "string")
+						{
+							fs.writeFileSync(leftFilePath, text);
+						}else
+						{
+							//Error can't read left file
+							vscode.window.showErrorMessage("Error: Can't open these files in Beyond Compare");
+							return;
+						}
+						break;
+					}
+				}
+			}
+			
 			temporaryFiles.push(leftFilePath);
 			options += " -lro";
 			leftLabel = tabInput.original.fsPath;
@@ -1145,9 +1174,35 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				extension = ".txt";
 			}
-			let rightFileContent = await vscode.workspace.fs.readFile(tabInput.modified);
+
 			rightFilePath = path.join(os.tmpdir(), rndName() + extension);
-			await vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
+
+			try
+			{
+				let rightFileContent = await vscode.workspace.fs.readFile(tabInput.modified);
+				await vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
+			}catch
+			{
+				let visibleEditors = vscode.window.visibleTextEditors;
+				for(let i = 0; i < visibleEditors.length; i++)
+				{
+					if(visibleEditors[i].document.uri.query === tabInput.modified.query)
+					{
+						let text = visibleEditors[i].document.getText();
+						if(typeof text === "string")
+						{
+							fs.writeFileSync(rightFilePath, text);
+						}else
+						{
+							//Error can't read right file
+							vscode.window.showErrorMessage("Error: Can't open these files in Beyond Compare");
+							return;
+						}
+						break;
+					}
+				}
+			}
+			
 			temporaryFiles.push(rightFilePath);
 			options += " -rro";
 			rightLabel = tabInput.modified.fsPath;
