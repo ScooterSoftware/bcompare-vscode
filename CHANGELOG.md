@@ -7,6 +7,7 @@
 - When comparing a staged file on the source control window, you are now given a choice between comparing it to the head or the current version
 - When comparing a staged file to the git head, the modified version now appears on the right rather than the left
 - In most cases, when opening a temp file, BC will now display a more appropriate name (ex. when comparing to clipboard, the contents of the clipboard will be labeled "Clipboard Contents" instead of the randomly generated file name)
+- Invoking "Compare with last save" by right clicking a tab no longer cycles through all open tabs unless the tab isn't active
 
 ## 1.0.5
 
