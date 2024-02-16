@@ -1135,13 +1135,11 @@ export function activate(context: vscode.ExtensionContext) {
 			}catch
 			{
 				let visibleEditors = vscode.window.visibleTextEditors;
-				let x = typeof visibleEditors[0].document.uri;
 				for(let i = 0; i < visibleEditors.length; i++)
 				{
 					if(visibleEditors[i].document.uri.query === tabInput.original.query)
 					{
 						let text = visibleEditors[i].document.getText();
-						let x = typeof text;
 						if(typeof text === "string")
 						{
 							fs.writeFileSync(leftFilePath, text);
