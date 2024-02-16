@@ -103,7 +103,7 @@
       },
       {
         "command": "bcompare-vscode.gitCompare",
-        "title": "Compare to Head with BC",
+        "title": "Compare to git with BC",
         "enablement": "scmProvider == git"
       },
       {

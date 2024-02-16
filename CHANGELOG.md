@@ -4,7 +4,9 @@
 
 - Comparing files in a remote workspace will now open temporary files in BC on the computer you're using rather than opening the files on the one you're accessing
 - Virtual files will now be copied into temporary files and should be compared properly
+- When comparing a staged file on the source control window, you are now given a choice between comparing it to the head or the current version
 - When comparing a staged file to the git head, the modified version now appears on the right rather than the left
+- In most cases, when opening a temp file, BC will now display a more appropriate name (ex. when comparing to clipboard, the contents of the clipboard will be labeled "Clipboard Contents" instead of the randomly generated file name)
 
 ## 1.0.5
 

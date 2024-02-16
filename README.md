@@ -63,7 +63,7 @@ Use this option to compare the version of a file you have open in the editor to 
 ![Compare a file to the saved version](images/CompareToSave.PNG)
 
 ### Compare to git repository
-Use this option to compare staged or unstaged changes to the last commit in the current branch.
+Use this option to compare staged or unstaged changes to the last commit in the current branch or compare staged changes to unstaged changes.
 
 ![Compare a file to git repository](images/GitCompare.PNG)
 

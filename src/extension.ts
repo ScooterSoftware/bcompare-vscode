@@ -540,7 +540,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(fs.existsSync(a.resourceUri.fsPath) && case5Head)
 				{
-					openBC("-lro", ["",""], case5Head, a.resourceUri.fsPath);
+					openBC("-lro", ["Head","Current Version"], case5Head, a.resourceUri.fsPath);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -551,12 +551,30 @@ export function activate(context: vscode.ExtensionContext) {
 				let case0Staged: string | false = await gitCompareHelper(a.resourceUri.fsPath, ":./");
 				let case0Head: string | false = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
 
-				if(case0Head && case0Staged)
+				
+				let compareTarget = await vscode.window.showQuickPick(["Compare to head","Compare to current version"], {placeHolder: 'Compare to what?'});
+
+				if(compareTarget === undefined)
 				{
-					openBC("-ro", ["",""], case0Head, case0Staged);
+					return;
+				}else if(compareTarget === "Compare to head")
+				{
+					if(case0Head && case0Staged)
+					{
+						openBC("-ro", ["Head","Staged"], case0Head, case0Staged);
+					}else
+					{
+						vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+					}
 				}else
 				{
-					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+					if(fs.existsSync(a.resourceUri.fsPath) && case0Staged)
+					{
+						openBC("-lro", ["Staged","Current Version"], case0Staged, a.resourceUri.fsPath);
+					}else
+					{
+						vscode.window.showErrorMessage("Error: an error occurred while reading from git");
+					}
 				}
 				break;
 			default:
@@ -899,11 +917,11 @@ export function activate(context: vscode.ExtensionContext) {
 			cmd += "\"" + files[file] + "\" ";
 		}
 
-		for(let i = 0; i < files.length, i++;)
+		for(let i = 0; i < files.length; i++)
 		{
 			if(names[i] !== "")
 			{
-				options += " -title" + i + "=\"" + names[i] + "\"";
+				options += " -title" + (i + 1) + "=\"" + names[i] + "\"";
 			}
 		}
 
