@@ -40,10 +40,16 @@
   ],
   "extensionKind": ["ui"],
   "main": "./out/extension.js",
-  "capabilities": {
-    "virtualWorkspaces": {
+  "capabilities": 
+  {
+    "virtualWorkspaces": 
+    {
       "supported": "limited",
       "description": "Some types of virtual documents can not be opened in Beyond Compare"
+    },
+    "untrustedWorkspaces": 
+    {
+      "supported": true
     }
   },
   "contributes": {
