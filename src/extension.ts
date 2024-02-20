@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let blnLeftReadOnly = false;
 	let strLeftLabel = "";
-	let BCPath: string | undefined = 'bcompare';
+	let BCPath: string | undefined = 'bcomp';
 	const strOS = os.platform();
 	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
 	const extensionName = "bcompare-vscode";
@@ -505,9 +505,15 @@ export function activate(context: vscode.ExtensionContext) {
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
 
-		let promise = await createRandomFile(selectedText);
-
-		let tempPath = promise.fsPath;
+		let uri : vscode.Uri;
+		try
+		{
+			uri = await createRandomFile(selectedText);
+		}catch
+		{
+			return;
+		}
+		let tempPath = uri.fsPath;
 
 		vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
 		vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
@@ -526,9 +532,17 @@ export function activate(context: vscode.ExtensionContext) {
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
 
-		let promise = await createRandomFile(selectedText);
+		let uri : vscode.Uri;
+		
+		try
+		{
+			uri = await createRandomFile(selectedText);
+		}catch
+		{
+			return;
+		}
 
-		let tempPath = promise.fsPath;
+		let tempPath = uri.fsPath;
 
 		temporaryFiles.push(tempPath);
 
@@ -710,9 +724,17 @@ export function activate(context: vscode.ExtensionContext) {
 		let selection = vscode.window.activeTextEditor.selection;
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
 
-		let promise = await createRandomFile(selectedText);
+		let uri : vscode.Uri;
+		
+		try
+		{
+			uri = await createRandomFile(selectedText);
+		}catch
+		{
+			return;
+		}
 
-		let tempPath = promise.fsPath;
+		let tempPath = uri.fsPath;
 
 		temporaryFiles.push(tempPath);
 		let comparePath = fs.realpathSync(tempPath);
@@ -829,9 +851,17 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		let textContent = editor.getText();
 
-		let promise = await createRandomFile(textContent, path.extname(filePath));
+		let uri : vscode.Uri;
+		
+		try
+		{
+			uri = await createRandomFile(textContent, path.extname(filePath));
+		}catch
+		{
+			return;
+		}
 
-		let editPath = promise.fsPath;
+		let editPath = uri.fsPath;
 
 		openBC("-ro", ["Saved Version", "Edited Version"], filePath, editPath);
 
@@ -876,8 +906,16 @@ export function activate(context: vscode.ExtensionContext) {
 			return false;
 		}
 
-		let promise = await createRandomFile(contents);
-		let returnPath = promise.fsPath;
+		let uri : vscode.Uri;
+		try
+		{
+			uri = await createRandomFile(contents);
+		}catch
+		{
+			return false;
+		}
+		
+		let returnPath = uri.fsPath;
 		temporaryFiles.push(returnPath);
 
 		return returnPath;
@@ -885,7 +923,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function bcPath() : string
 	{
-		if(BCPath === "bcompare")
+		if(BCPath === "bcomp")
 		{
 			return BCPath;
 		}else
@@ -902,14 +940,14 @@ export function activate(context: vscode.ExtensionContext) {
 			let versionNumbers = ['', ' 5', ' 4',' 3'];
 			for(var folder in topFolders)
 			{
-				if(BCPath !== 'bcompare')
+				if(BCPath !== 'bcomp')
 				{
 					break;
 				}
 				for(var version in versionNumbers)
 				{
 					const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
-					if(BCPath === 'bcompare')
+					if(BCPath === 'bcomp')
 					{
 						try
 						{
@@ -917,12 +955,16 @@ export function activate(context: vscode.ExtensionContext) {
 								topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
 							if(BCPath === undefined || BCPath === '')//if not found, reset to default
 							{
-								BCPath = 'bcompare';
+								BCPath = 'bcomp';
+							}else
+							{
+								BCPath = BCPath.replace("BCompare.exe", "BComp.exe");
+								break;
 							}
 							
 						}catch
 						{
-							BCPath = 'bcompare';
+							BCPath = 'bcomp';
 						}
 					}
 				}
@@ -972,6 +1014,11 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				}
 			}
+			
+			files.forEach(file =>{
+				deleteFileIfTemp(file);
+			});
+
 		});
 	}
 
@@ -1076,6 +1123,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function writeLeftPath(strPath : string, blnTempFile : boolean = false, strNewLeftName : string = "")
 	{
+		let oldLeftPath = leftPath;
 		leftPath = strPath;
 		
 		if(globalState.get("leftIsPreserved"))//If the current left path is a temp file
@@ -1093,6 +1141,10 @@ export function activate(context: vscode.ExtensionContext) {
 		globalState.update("leftPath", strPath);
 		globalState.update("leftIsPreserved", blnTempFile);
 		globalState.update("leftName", strLeftLabel);
+		if(strPath !== '')
+		{
+			deleteFileIfTemp(oldLeftPath);
+		}
 	}
 
 	function readLeftPath()
@@ -1173,7 +1225,14 @@ export function activate(context: vscode.ExtensionContext) {
 						let text = visibleEditors[i].document.getText();
 						if(typeof text === "string")
 						{
-							fs.writeFileSync(leftFilePath, text);
+							try
+							{
+								fs.writeFileSync(leftFilePath, text);
+							}catch
+							{
+								vscode.window.showErrorMessage("Error: an error occurred while writing a file");
+								return;
+							}
 						}else
 						{
 							//Error can't read left file
@@ -1220,7 +1279,14 @@ export function activate(context: vscode.ExtensionContext) {
 						let text = visibleEditors[i].document.getText();
 						if(typeof text === "string")
 						{
-							fs.writeFileSync(rightFilePath, text);
+							try
+							{
+								fs.writeFileSync(rightFilePath, text);
+							}catch
+							{
+								vscode.window.showErrorMessage("Error: an error occurred while writing a file");
+								return;
+							}
 						}else
 						{
 							//Error can't read right file
@@ -1259,6 +1325,32 @@ export function activate(context: vscode.ExtensionContext) {
 			return false;
 		}
 	}
+
+	function deleteFileIfTemp(path : string)
+	{
+		let fileIsTemp = false;
+		let intFoundIndex : number = -1;//'i' will always be set to something else in the cases where it's needed
+		for(let i = 0; i < temporaryFiles.length; i++)
+		{
+			if(path === temporaryFiles[i])
+			{
+				fileIsTemp = true;
+				intFoundIndex = i;
+				break;
+			}
+		}
+
+		if(fileIsTemp && fs.existsSync(path))
+		{
+			fs.promises.unlink(path);
+			for(let i = intFoundIndex; i < temporaryFiles.length - 1; i++)
+			{
+				temporaryFiles[i] = temporaryFiles[i+1];
+			}
+
+			temporaryFiles.pop;
+		}
+	}
 }
 
 function verifyIsString(strInput : any, strDefault : string = "") : string
@@ -1274,7 +1366,7 @@ function verifyIsString(strInput : any, strDefault : string = "") : string
 
 
 // This method is called when the extension is deactivated
-export function deactivate() 
+export function deactivate()
 {
 	leftPath = verifyIsString(globalState.get("leftPath"));//Make sure that leftPath is updated
 
@@ -1282,7 +1374,7 @@ export function deactivate()
 	{
 		if(fs.existsSync(file) && file !== leftPath) //but not the left file
 		{
-			fs.promises.unlink(file);
+			fs.promises.unlink(file); //In theory, this will never happen - all temp files other than the current left should have already been deleted
 		}
 	});
 }
