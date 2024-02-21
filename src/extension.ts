@@ -78,7 +78,17 @@ export function activate(context: vscode.ExtensionContext) {
 	// });
 
 
-	registerCommand('.selectLeft', async (a) =>
+	registerCommand('.selectLeft', (a) =>
+	{
+		selectLeft(a);
+	});
+
+	registerCommand('.selectLeftExplorer', (a) =>
+	{
+		selectLeft(a);
+	});
+
+	async function selectLeft(a: any)
 	{
 		let success = false;
 		let leftFileName : string = "";
@@ -140,9 +150,19 @@ export function activate(context: vscode.ExtensionContext) {
 			
 			vscode.window.showInformationMessage("Marked \"" + leftFileName + "\" as left file");
 		}
+	}
+
+	registerCommand('.compareWithLeft', (a) =>
+	{
+		compareWithLeft(a);
 	});
 
-	registerCommand('.compareWithLeft', async (a) =>
+	registerCommand('.compareWithLeftExplorer', (a) =>
+	{
+		compareWithLeft(a);
+	});
+
+	async function compareWithLeft(a: any)
 	{
 		let rightPath : string | false = "";
 		let blnRRO : boolean = false;
@@ -204,7 +224,7 @@ export function activate(context: vscode.ExtensionContext) {
 			openBC(option, [strLeftLabel, rightLabel], leftPath, rightPath);
 			clearLeftPath();
 		}
-	});
+	}
 
 	registerCommand('.selectLeftFolder', (a) => 
 	{
@@ -245,6 +265,16 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	registerCommand('.compareWithFile', (a) =>
+	{
+		compareWithFile(a);
+	});
+
+	registerCommand('.compareWithFileExplorer', (a) =>
+	{
+		compareWithFile(a);
+	});
+
+	function compareWithFile(a : any)
 	{
 		let options = 
 		{
@@ -289,7 +319,7 @@ export function activate(context: vscode.ExtensionContext) {
 				openBC(options, [a.fsPath, file[0].fsPath], aFile, compFile);
 			}
 		});
-	});
+	}
 
 	registerCommand('.compareWithFolder', (a) =>
 	{
@@ -314,7 +344,16 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.compareParent', (a) =>
 	{
-		
+		compareParent(a);
+	});
+
+	registerCommand('.compareParentExplorer', (a) =>
+	{
+		compareParent(a);
+	});
+
+	function compareParent(a : any)
+	{
 		let success = false;
 		var fullPath: String;
 		if(a)
@@ -381,7 +420,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			openBC("", ["",""], folderPath ,folder[0].fsPath);
 		});
-	});
+	}
 
 	registerCommand('.compareWithSave', async (a) =>
 	{

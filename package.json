@@ -150,6 +150,27 @@
         "title": "Compare Text to Clipboard Contents",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection"
+      },
+      {
+        "command": "bcompare-vscode.selectLeftExplorer",
+        "title": "Select Left File",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareWithLeftExplorer",
+        "title": "Compare to Left File",
+        "category": "Beyond Compare",
+        "enablement": "bcompare-vscode.leftSelected"
+      },
+      {
+        "command": "bcompare-vscode.compareWithFileExplorer",
+        "title": "Compare to File...",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareParentExplorer",
+        "title": "Compare Parent to Folder...",
+        "category": "Beyond Compare"
       }
     ],
     "submenus": [
@@ -242,22 +263,22 @@
           "group": "2general@4"
         },
         {
-          "command": "bcompare-vscode.compareParent",
+          "command": "bcompare-vscode.compareParentExplorer",
           "when": "explorerResourceIsFolder === false && resourceScheme === file",
           "group": "2general@3"
         },
         {
-          "command": "bcompare-vscode.selectLeft",
+          "command": "bcompare-vscode.selectLeftExplorer",
           "when": "explorerResourceIsFolder === false",
           "group": "1LeftRight"
         },
         {
-          "command": "bcompare-vscode.compareWithLeft",
+          "command": "bcompare-vscode.compareWithLeftExplorer",
           "when": "explorerResourceIsFolder === false && bcompare-vscode.leftSelected",
           "group": "1LeftRight"
         },
         {
-          "command": "bcompare-vscode.compareWithFile",
+          "command": "bcompare-vscode.compareWithFileExplorer",
           "when": "explorerResourceIsFolder === false",
           "group": "2general@1"
         },
