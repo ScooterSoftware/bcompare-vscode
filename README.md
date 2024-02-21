@@ -15,8 +15,6 @@ This extension allows you to open Beyond Compare directly from VSCode in several
     - [Compare selected](#compare-selected)
     - [Compare to clipboard](#compare-to-clipboard)
     - [Open Beyond Compare from Diff Editor](#open-beyond-compare-from-diff-editor)
-<!-- - [Settings](#settings)
-    - [Replace Diff Editor](#replace-diff-editor) -->
 - [Requirements](#requirements)
 
 ---
@@ -65,7 +63,7 @@ Use this option to compare the version of a file you have open in the editor to 
 ![Compare a file to the saved version](images/CompareToSave.PNG)
 
 ### Compare to git repository
-Use this option to compare staged or unstaged changes to the last commit in the current branch.
+Use this option to compare staged or unstaged changes to the last commit in the current branch or compare staged changes to unstaged changes.
 
 ![Compare a file to git repository](images/GitCompare.PNG)
 
@@ -87,15 +85,6 @@ Or to a highlighted selection of text.
 Use this button when you have a comparison open in VSCode to open it in Beyond Compare.
 
 ![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
-
-<!-- There is also a [setting](#settings) to automatically open BC whenever a comparison is opened. -->
-
-<!-- ## Settings
-
-### Replace Diff Editor
-Use this setting to skip VSCode's built-in Diff Editor and go straight to Beyond Compare.
-
-![Replace Diff Editor](images/AutoOpenBCSetting.PNG) -->
 
 ## Requirements
 

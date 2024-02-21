@@ -2,7 +2,7 @@
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare",
   "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
-  "version": "1.0.3",
+  "version": "1.0.6",
   "publisher": "ScooterSoftware",
   "contributors": [
     "Cal Shucha",
@@ -38,7 +38,20 @@
   "activationEvents": [
     "onStartupFinished"
   ],
+  "extensionKind": ["ui"],
   "main": "./out/extension.js",
+  "capabilities": 
+  {
+    "virtualWorkspaces": 
+    {
+      "supported": "limited",
+      "description": "Some types of virtual documents can not be opened in Beyond Compare"
+    },
+    "untrustedWorkspaces": 
+    {
+      "supported": true
+    }
+  },
   "contributes": {
     "commands": [
       {
@@ -60,7 +73,7 @@
       {
         "command": "bcompare-vscode.selectLeftFolder",
         "title": "Select Left Folder",
-        "catagory": "Beyond Compare"
+        "category": "Beyond Compare"
       },
       {
         "command": "bcompare-vscode.compareWithLeftFolder",
@@ -102,7 +115,7 @@
       },
       {
         "command": "bcompare-vscode.gitCompare",
-        "title": "Compare to Head with BC",
+        "title": "Compare to git with BC",
         "enablement": "scmProvider == git"
       },
       {
@@ -137,6 +150,27 @@
         "title": "Compare Text to Clipboard Contents",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection"
+      },
+      {
+        "command": "bcompare-vscode.selectLeftExplorer",
+        "title": "Select Left File",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareWithLeftExplorer",
+        "title": "Compare to Left File",
+        "category": "Beyond Compare",
+        "enablement": "bcompare-vscode.leftSelected"
+      },
+      {
+        "command": "bcompare-vscode.compareWithFileExplorer",
+        "title": "Compare to File...",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareParentExplorer",
+        "title": "Compare Parent to Folder...",
+        "category": "Beyond Compare"
       }
     ],
     "submenus": [
@@ -161,7 +195,7 @@
       "editor/title/context": [
         {
           "submenu": "editorTitleContextCompare",
-          "when": "isFileSystemResource && !sideBySideEditorActive"
+          "when": "!sideBySideEditorActive && isFileSystemResource"
         }
       ],
       "editorTitleContextCompare": [
@@ -184,6 +218,7 @@
         },
         {
           "command": "bcompare-vscode.compareParent",
+          "when": "resourceScheme === file",
           "group": "2general@3"
         },
         {
@@ -199,7 +234,7 @@
       "explorer/context": [
         {
           "submenu": "explorerContextCompare",
-          "when": "listMultiSelection === false"
+          "when": "listMultiSelection === false && !(resourceScheme === vscode-remote && explorerResourceIsFolder)"
         },
         {
           "submenu": "explorerMultiContextCompare",
@@ -228,38 +263,38 @@
           "group": "2general@4"
         },
         {
-          "command": "bcompare-vscode.compareParent",
-          "when": "explorerResourceIsFolder === false",
+          "command": "bcompare-vscode.compareParentExplorer",
+          "when": "explorerResourceIsFolder === false && resourceScheme === file",
           "group": "2general@3"
         },
         {
-          "command": "bcompare-vscode.selectLeft",
+          "command": "bcompare-vscode.selectLeftExplorer",
           "when": "explorerResourceIsFolder === false",
           "group": "1LeftRight"
         },
         {
-          "command": "bcompare-vscode.compareWithLeft",
+          "command": "bcompare-vscode.compareWithLeftExplorer",
           "when": "explorerResourceIsFolder === false && bcompare-vscode.leftSelected",
           "group": "1LeftRight"
         },
         {
-          "command": "bcompare-vscode.compareWithFile",
+          "command": "bcompare-vscode.compareWithFileExplorer",
           "when": "explorerResourceIsFolder === false",
           "group": "2general@1"
         },
         {
           "command": "bcompare-vscode.selectLeftFolder",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && resourceScheme !== vscode-remote",
           "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithLeftFolder",
-          "when": "explorerResourceIsFolder && bcompare-vscode.leftFolderSelected",
+          "when": "explorerResourceIsFolder && bcompare-vscode.leftFolderSelected && resourceScheme !== vscode-remote",
           "group": "1LeftRight"
         },
         {
           "command": "bcompare-vscode.compareWithFolder",
-          "when": "explorerResourceIsFolder",
+          "when": "explorerResourceIsFolder && resourceScheme !== vscode-remote",
           "group": "2general@2"
         }
       ],
@@ -288,7 +323,7 @@
       "scm/resourceState/context": [
         {
           "command": "bcompare-vscode.gitCompare",
-          "when": "scmProvider == git"
+          "when": "scmProvider == git && resourcePath =~ /./"
         }
       ],
       "editor/title": [
