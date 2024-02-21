@@ -592,7 +592,7 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 				break;
 			case 0:
-				//Modified and staged, compare staged to version on git (head)
+				//Modified and staged, compare staged to version on git (head) or unstaged changes
 				let case0Staged: string | false = await gitCompareHelper(a.resourceUri.fsPath, ":./");
 				let case0Head: string | false = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
 
@@ -1191,122 +1191,178 @@ export function activate(context: vscode.ExtensionContext) {
 
 	async function openFromDiffHelper(tabInput : vscode.TabInputTextDiff)
 	{
-		let rightFilePath : string;
-		let leftFilePath : string;
+		let rightFilePath : string = "";
+		let leftFilePath : string = "";
 		let options = "";
 		let leftLabel = "";
 		let rightLabel = "";
 
+		let blnUsingEditorText = false;
 
-		if(tabInput.original.scheme !== "file")
+		if(vscode.window.tabGroups.activeTabGroup.activeTab?.isDirty)
 		{
-			let extension : string;
-			try
+			let compareTarget = await vscode.window.showQuickPick(["Compare saved versions","Compare current versions (read only)"], {placeHolder: 'At least one of these files have been edited. Which versions do you want to open?'});
+			if(compareTarget === "Compare current versions (read only)")
 			{
-				extension = path.extname(tabInput.original.path);
-			}catch
+				blnUsingEditorText = true;
+				leftFilePath = extractExtAndMakeRandomFilePath(tabInput.original.path);
+				openFromDiffHelper2(tabInput.original, leftFilePath);
+				rightFilePath = extractExtAndMakeRandomFilePath(tabInput.modified.path);
+				openFromDiffHelper2(tabInput.modified,rightFilePath);
+				temporaryFiles.push(leftFilePath);
+				leftLabel = tabInput.original.fsPath + " (Unsaved Changes)";
+				temporaryFiles.push(rightFilePath);
+				rightLabel = tabInput.modified.fsPath + " (Unsaved Changes)";
+				options += " -ro";
+			}else if(compareTarget === undefined)
 			{
-				extension = ".txt";
+				return;
 			}
-
-			leftFilePath = path.join(os.tmpdir(), rndName() + extension);
-
-			try
-			{
-				let leftFileContent = await vscode.workspace.fs.readFile(tabInput.original);
-				await vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
-			}catch
-			{
-				let visibleEditors = vscode.window.visibleTextEditors;
-				for(let i = 0; i < visibleEditors.length; i++)
-				{
-					if(visibleEditors[i].document.uri.query === tabInput.original.query)
-					{
-						let text = visibleEditors[i].document.getText();
-						if(typeof text === "string")
-						{
-							try
-							{
-								fs.writeFileSync(leftFilePath, text);
-							}catch
-							{
-								vscode.window.showErrorMessage("Error: an error occurred while writing a file");
-								return;
-							}
-						}else
-						{
-							//Error can't read left file
-							vscode.window.showErrorMessage("Error: Can't open these files in Beyond Compare");
-							return;
-						}
-						break;
-					}
-				}
-			}
-			
-			temporaryFiles.push(leftFilePath);
-			options += " -lro";
-			leftLabel = tabInput.original.fsPath;
-		}else
-		{
-			leftFilePath = tabInput.original.fsPath;
 		}
 
-		if(tabInput.modified.scheme !== "file")
+		if(!blnUsingEditorText)
 		{
-			let extension : string;
-			try
+			let leftDiskCheck = await isUriSameAsDisk(tabInput.original);//True if same, false or Uint8array if different
+			if(leftDiskCheck !== true)
 			{
-				extension = path.extname(tabInput.modified.path);
-			}catch
-			{
-				extension = ".txt";
-			}
-
-			rightFilePath = path.join(os.tmpdir(), rndName() + extension);
-
-			try
-			{
-				let rightFileContent = await vscode.workspace.fs.readFile(tabInput.modified);
-				await vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
-			}catch
-			{
-				let visibleEditors = vscode.window.visibleTextEditors;
-				for(let i = 0; i < visibleEditors.length; i++)
+				leftFilePath = extractExtAndMakeRandomFilePath(tabInput.original.path);
+				try
 				{
-					if(visibleEditors[i].document.uri.query === tabInput.modified.query)
+					let leftFileContent : Uint8Array;
+					if(leftDiskCheck === false)
 					{
-						let text = visibleEditors[i].document.getText();
-						if(typeof text === "string")
-						{
-							try
-							{
-								fs.writeFileSync(rightFilePath, text);
-							}catch
-							{
-								vscode.window.showErrorMessage("Error: an error occurred while writing a file");
-								return;
-							}
-						}else
-						{
-							//Error can't read right file
-							vscode.window.showErrorMessage("Error: Can't open these files in Beyond Compare");
-							return;
-						}
-						break;
+						leftFileContent = await vscode.workspace.fs.readFile(tabInput.original);
+					}else
+					{
+						leftFileContent = leftDiskCheck;
 					}
+					await vscode.workspace.fs.writeFile(vscode.Uri.file(leftFilePath), leftFileContent);
+				}catch
+				{
+					openFromDiffHelper2(tabInput.original, leftFilePath);
 				}
+				
+				temporaryFiles.push(leftFilePath);
+				options += " -lro";
+				leftLabel = tabInput.original.fsPath;
+			}else
+			{
+				leftFilePath = tabInput.original.fsPath;
 			}
-			
-			temporaryFiles.push(rightFilePath);
-			options += " -rro";
-			rightLabel = tabInput.modified.fsPath;
-		}else
-		{
-			rightFilePath = tabInput.modified.fsPath;
+
+			let rightDiskCheck = await isUriSameAsDisk(tabInput.modified);
+			if(rightDiskCheck !== true)
+			{
+				
+				rightFilePath = extractExtAndMakeRandomFilePath(tabInput.modified.path);
+
+				try
+				{
+					let rightFileContent : Uint8Array;
+					if(rightDiskCheck === false)
+					{
+						rightFileContent = await vscode.workspace.fs.readFile(tabInput.modified);
+					}else
+					{
+						rightFileContent = rightDiskCheck;
+					}
+					await vscode.workspace.fs.writeFile(vscode.Uri.file(rightFilePath), rightFileContent);
+				}catch
+				{
+					openFromDiffHelper2(tabInput.modified, rightFilePath);
+				}
+				
+				temporaryFiles.push(rightFilePath);
+				options += " -rro";
+				rightLabel = tabInput.modified.fsPath;
+			}else
+			{
+				rightFilePath = tabInput.modified.fsPath;
+			}
 		}
 
 		openBC(options, [leftLabel, rightLabel], leftFilePath, rightFilePath);
+	}
+
+	function openFromDiffHelper2(uri : vscode.Uri, filePath : string)
+	{
+		let visibleEditors = vscode.window.visibleTextEditors;
+		for(let i = 0; i < visibleEditors.length; i++)
+		{
+			if(visibleEditors[i].document.uri.query === uri.query 
+			&& visibleEditors[i].document.uri.fsPath === uri.fsPath)
+			{
+				let text = visibleEditors[i].document.getText();
+				if(typeof text === "string")
+				{
+					try
+					{
+						fs.writeFileSync(filePath, text);
+					}catch
+					{
+						vscode.window.showErrorMessage("Error: an error occurred while writing a file");
+						return;
+					}
+				}else
+				{
+					//Error can't read left file
+					vscode.window.showErrorMessage("Error: Can't open these files in Beyond Compare");
+					return;
+				}
+				break;
+			}
+		}
+	}
+
+	function extractExtAndMakeRandomFilePath(originalPath : string) : string
+	{
+		let extension : string;
+			try
+			{
+				extension = path.extname(originalPath);
+			}catch
+			{
+				extension = ".txt";
+			}
+
+			return path.join(os.tmpdir(), rndName() + extension);
+	}
+
+	async function isUriSameAsDisk(uri1 : vscode.Uri) : Promise<boolean | Uint8Array>
+	{
+		let uri2 : vscode.Uri;
+		try
+		{
+			uri2 = vscode.Uri.parse(uri1.path);
+			fs.accessSync(uri2.fsPath, fs.constants.R_OK);//Throws if file can't be read
+		}catch
+		{
+			return false;
+		}
+
+		// let uri2stat = fs.statSync(uri2.fsPath).size;
+		// let uri1stat = (await vscode.workspace.fs.stat(uri1)).size;
+
+		if (fs.statSync(uri2.fsPath).size !== (await vscode.workspace.fs.stat(uri1)).size) 
+		{ 
+			return false; 
+		}
+
+		const editorContent = await vscode.workspace.fs.readFile(uri1); 
+		const diskContent = await vscode.workspace.fs.readFile(uri2);
+		if(editorContent.length !== diskContent.length)
+		{
+			return editorContent;
+		}
+		
+		for (let i = 0; i < editorContent.length; i++) 
+		{ 
+			if (editorContent[i] !== diskContent[i]) 
+			{ 
+				return editorContent; 
+			} 
+		}
+		return true;
 	}
 
 	async function copyRemoteFileAsTemp(a : any) : Promise<string | false>

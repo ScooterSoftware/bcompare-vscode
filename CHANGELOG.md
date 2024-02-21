@@ -9,6 +9,8 @@
 - In most cases, when opening a temp file, BC will now display a more appropriate name (ex. when comparing to clipboard, the contents of the clipboard will be labeled "Clipboard Contents" instead of the randomly generated file name)
 - Invoking "Compare with last save" by right clicking a tab no longer cycles through all open tabs unless the tab isn't active
 - Temporary files created by the extension are now deleted as soon as they are done being used rather than when VSCode is closed
+- If a virtual file has a version stored on disk and the two are identical (for example, a git virtual file of the latest revision), using "Open Diff in Beyond Compare" will try to open the version on disk rather than a read only copy. This isn't possible with some types of virtual files, such as the kind created by the "Git Graph" extension.
+- If at least one side of a diff tab has unsaved changes, using "Open Diff in Beyond Compare" will prompt you to chose whether you want to open the saved versions or the edited versions
 - The extension will now work in untrusted workspaces
 
 ## 1.0.5
