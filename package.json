@@ -415,7 +415,7 @@
     "configuration": {
       "title": "Beyond Compare",
       "properties": {
-      "bcompare-vscode.skipDefaultCompareTool": {
+      "bcompare-vscode.autoOpenCompare": {
         "type": "boolean",
         "default": false,
         "description": "Controls whether Beyond Compare is used instead of the built-in Diff Editor for standard comparison commands."

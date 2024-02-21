@@ -23,6 +23,7 @@ import { simpleGit} from 'simple-git';
 import * as path from 'path';
 import * as vsWinReg from '@vscode/windows-registry';
 import * as os from 'node:os';
+import { error } from 'console';
 
 let temporaryFiles: string[] = [];
 let leftPath = "";
@@ -50,20 +51,20 @@ export function activate(context: vscode.ExtensionContext) {
 	}); 
 
 	vscode.window.tabGroups.onDidChangeTabs(event => {
-		if(event.opened.length >= 1 /*&& vscode.workspace.getConfiguration("bcompare-vscode").skipDefaultCompareTool*/)
+		if(event.opened.length >= 1 && vscode.workspace.getConfiguration("bcompare-vscode").autoOpenCompare)
 		{
-			event.opened.forEach((tab) => {
-				try //Try-catch in case another extension messes with things first
+			event.opened.forEach(async (tab) => {
+				try 
 				{
 					if(tab.input instanceof vscode.TabInputTextDiff)
 					{
-						if(isFileOrGit(tab.input))
-						{	
-							openFromDiffHelper(tab.input);
-							vscode.window.tabGroups.close(tab);
-						}
+						try
+						{
+							await openFromDiffHelper(tab.input);
+							vscode.window.tabGroups.close(tab);//Only close tab if openFromDiffHelper was successful
+						}catch{}
 					}
-				}catch(e){}
+				}catch{}
 			});
 		}
 	});
@@ -671,15 +672,10 @@ export function activate(context: vscode.ExtensionContext) {
 
 		if(tab.input instanceof vscode.TabInputTextDiff)
 		{
-			if(isFileOrGit(tab.input))
+			try
 			{
 				openFromDiffHelper(tab.input);
-			}else
-			{
-				//Error-virtual files
-				vscode.window.showErrorMessage("Error: Can not open a comparison unless both files are stored on the disk");
-				return;
-			}
+			}catch{}
 		}else
 		{
 			//Error-not a diff tab
@@ -1339,13 +1335,13 @@ export function activate(context: vscode.ExtensionContext) {
 					}catch
 					{
 						vscode.window.showErrorMessage("Error: an error occurred while writing a file");
-						return;
+						throw error("File writing error");
 					}
 				}else
 				{
 					//Error can't read left file
 					vscode.window.showErrorMessage("Error: Can't open these files in Beyond Compare");
-					return;
+					throw error("Invalid file type");
 				}
 				break;
 			}
@@ -1444,21 +1440,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 			temporaryFiles.pop;
 		}
-	}
-
-	function isFileOrGit(input : vscode.TabInputTextDiff) : boolean
-	{
-		if(!(input.modified.scheme === "file" || input.modified.scheme === "git"))
-		{
-			return false;
-		}
-
-		if(!(input.original.scheme === "file" || input.original.scheme === "git"))
-		{
-			return false;
-		}
-
-		return true;
 	}
 }
 
