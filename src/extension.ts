@@ -60,6 +60,14 @@ export function activate(context: vscode.ExtensionContext) {
 					{
 						try
 						{
+							let i = 0;
+							let x = vscode.window.visibleTextEditors.length;
+							for(i = 0; vscode.window.visibleTextEditors.length <= 0 && i < 100; i++)
+							{
+								await delay(10);	
+								x = vscode.window.visibleTextEditors.length;
+							}
+
 							await openFromDiffHelper(tab.input);
 							vscode.window.tabGroups.close(tab);//Only close tab if openFromDiffHelper was successful
 						}catch{}
