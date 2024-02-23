@@ -5,8 +5,8 @@ This extension allows you to open Beyond Compare directly from VSCode in several
 ## Requirements
 
 - Beyond Compare must be installed.
-- macOS: **bcomp**** command line tool must be installed.  Within Beyond Compare use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
-- Compatible with Visual Studio Desktop for Windows, macOS, and Linux.
+- macOS: **bcomp** command line tool must be installed.  Within Beyond Compare use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
+- Compatible with Visual Studio Code for Windows, macOS, and Linux.
 
 ## Commands
 
