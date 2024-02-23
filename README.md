@@ -2,24 +2,24 @@
 
 This extension allows you to open Beyond Compare directly from VSCode in several useful ways.
 
-## Features
+## Requirements
 
-- [Commands](#commands)
-    - [Compare two open files](#compare-two-open-files)
-    - [Compare highlighted text](#compare-highlighted-text)
-    - [Compare folders](#compare-folders)
-    - [Compare files to non-open files](#compare-files-to-non-open-files)
-    - [Compare parent to folder](#compare-parent-to-folder)
-    - [Compare to saved version](#compare-to-saved-version)
-    - [Compare to git repository](#compare-to-git-repository)
-    - [Compare selected](#compare-selected)
-    - [Compare to clipboard](#compare-to-clipboard)
-    - [Open Beyond Compare from Diff Editor](#open-beyond-compare-from-diff-editor)
-- [Requirements](#requirements)
-
----
+- Beyond Compare must be installed.
+- macOS: **bcomp**** command line tool must be installed.  Within Beyond Compare use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
+- Compatible with Visual Studio Desktop for Windows, macOS, and Linux.
 
 ## Commands
+
+- [Compare two open files](#compare-two-open-files)
+- [Compare highlighted text](#compare-highlighted-text)
+- [Compare folders](#compare-folders)
+- [Compare files to non-open files](#compare-files-to-non-open-files)
+- [Compare parent to folder](#compare-parent-to-folder)
+- [Compare to saved version](#compare-to-saved-version)
+- [Compare to git repository](#compare-to-git-repository)
+- [Compare selected](#compare-selected)
+- [Compare to clipboard](#compare-to-clipboard)
+- [Open Beyond Compare from Diff Editor](#open-beyond-compare-from-diff-editor)
 
 ### Compare two open files
 Use this option to select a file for comparison.
@@ -85,9 +85,3 @@ Or to a highlighted selection of text.
 Use this button when you have a comparison open in VSCode to open it in Beyond Compare.
 
 ![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
-
-## Requirements
-
-Beyond Compare must be installed on your computer.
-
-**macOS**: `bcomp` command line tool must be installed.  Within **Beyond Compare** use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
