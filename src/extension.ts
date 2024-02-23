@@ -1047,7 +1047,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				if(error.code !== undefined)
 				{
-					if ((error.code >= 100 && error.code !== 101) || stderr !== '')
+					if ((error.code > 102 || error.code === 100) || stderr !== '')
 					{
 						vscode.window.showErrorMessage(BCLoadErrorMessage);
 					}
