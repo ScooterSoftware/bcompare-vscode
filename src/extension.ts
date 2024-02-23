@@ -624,7 +624,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 				if(fs.existsSync(a.resourceUri.fsPath) && case5Head)
 				{
-					openBC("-lro", ["Head","Current Version"], case5Head, a.resourceUri.fsPath);
+					openBC("-lro", [path.basename(a.resourceUri.fsPath) + " (Head)", path.basename(a.resourceUri.fsPath) + " (Current Version)"], case5Head, a.resourceUri.fsPath);
 				}else
 				{
 					vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -645,7 +645,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					if(case0Head && case0Staged)
 					{
-						openBC("-ro", ["Head","Staged"], case0Head, case0Staged);
+						openBC("-ro", [path.basename(a.resourceUri.fsPath) + " (Head)", path.basename(a.resourceUri.fsPath) + " (Staged)"], case0Head, case0Staged);
 					}else
 					{
 						vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -654,7 +654,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					if(fs.existsSync(a.resourceUri.fsPath) && case0Staged)
 					{
-						openBC("-lro", ["Staged","Current Version"], case0Staged, a.resourceUri.fsPath);
+						openBC("-lro", [path.basename(a.resourceUri.fsPath) + " (Staged)", path.basename(a.resourceUri.fsPath) + " (Current Version)"], case0Staged, a.resourceUri.fsPath);
 					}else
 					{
 						vscode.window.showErrorMessage("Error: an error occurred while reading from git");
@@ -669,7 +669,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.openFromDiff', async () =>
 	{
-		let tab = vscode.window.tabGroups.activeTabGroup.activeTab;
+		let tab : vscode.Tab | undefined = vscode.window.tabGroups.activeTabGroup.activeTab;
 
 		if(tab === undefined)
 		{
@@ -1283,7 +1283,8 @@ export function activate(context: vscode.ExtensionContext) {
 				
 				temporaryFiles.push(leftFilePath);
 				options += " -lro";
-				leftLabel = tabInput.original.fsPath;
+				options += " -vcs1" + path.basename(tabInput.original.fsPath);
+				leftLabel = getLabelForOpenFromDiff(tabInput.original);
 			}else
 			{
 				leftFilePath = tabInput.original.fsPath;
@@ -1313,7 +1314,8 @@ export function activate(context: vscode.ExtensionContext) {
 				
 				temporaryFiles.push(rightFilePath);
 				options += " -rro";
-				rightLabel = tabInput.modified.fsPath;
+				options += " -vcs2" + path.basename(tabInput.modified.fsPath);
+				rightLabel = getLabelForOpenFromDiff(tabInput.modified);
 			}else
 			{
 				rightFilePath = tabInput.modified.fsPath;
@@ -1321,6 +1323,34 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		openBC(options, [leftLabel, rightLabel], leftFilePath, rightFilePath);
+	}
+
+	function getLabelForOpenFromDiff(uri : vscode.Uri) : string
+	{
+		let filename = path.basename(uri.fsPath); 
+		let title = filename; 
+		try 
+		{ 
+			if (uri.scheme === 'file') 
+			{ 
+				title = uri.fsPath; 
+			} 
+			else 
+			{ 
+				title = vscode.Uri.from({scheme: uri.scheme, authority: uri.authority, path: uri.path}).toString(true); 
+				if (uri.scheme === 'git') 
+				{ 
+						let gitQuery = JSON.parse(uri.query); 
+						title = title + ' @' + gitQuery.ref; 
+				} 
+			} 
+		} 
+		catch 
+		{ 
+			title = filename;
+		}
+
+		return title;
 	}
 
 	function openFromDiffHelper2(uri : vscode.Uri, filePath : string)
