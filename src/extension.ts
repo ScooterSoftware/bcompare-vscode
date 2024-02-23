@@ -296,7 +296,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let aFile : string | false;
 			if(a.scheme === "file")
 			{
-				//openBC("", a.fsPath, file[0].fsPath);
+				//openBC("", ["",""], a.fsPath, file[0].fsPath);
 				aFile = a.fsPath;
 			}else
 			{
@@ -338,7 +338,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				return;
 			}
-			openBC("", a.fsPath, folder[0].fsPath);
+			openBC("", ["",""], a.fsPath, folder[0].fsPath);
 		});
 	});
 
@@ -852,7 +852,7 @@ export function activate(context: vscode.ExtensionContext) {
 					}
 				}
 				
-				openBC(options, fileLeft, fileRight);
+				openBC(options, ["",""], fileLeft, fileRight);
 				
 			}else
 			{
@@ -873,7 +873,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 			if(fs.statSync(fileLeft).isFile === fs.statSync(fileRight).isFile && fs.statSync(fileLeft).isFile === fs.statSync(fileCenter).isFile)
 			{
-				openBC("", fileLeft, fileRight, fileCenter);
+				openBC("", ["","",""], fileLeft, fileRight, fileCenter);
 			}else
 			{
 				//Error: Can't compare files to directories
