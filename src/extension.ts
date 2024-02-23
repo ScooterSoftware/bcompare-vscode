@@ -1047,7 +1047,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				if(error.code !== undefined)
 				{
-					if(stderr === "The filename, directory name, or volume label syntax is incorrect.\r\n" && strOS === "darwin")
+					if(stderr !== "" && strOS === "darwin")
 					{
 						vscode.window.showErrorMessage("Error: bcomp not found.  Launch Beyond Compare and use the Beyond Compare > Install Command Line Tools... menu to install it.");
 					}else if((error.code > 102 || error.code === 100) || stderr !== '')
