@@ -90,3 +90,4 @@ Use this button when you have a comparison open in VSCode to open it in Beyond C
 
 Beyond Compare must be installed on your computer.
 
+**macOS**: `bcomp` command line tool must be installed.  Within **Beyond Compare** use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
