@@ -1039,8 +1039,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 		cmd += options;
 
-		cmd = "ds" + cmd;
-
 		//Clear left file/folder
 
 		exec(cmd, (error,stdout,stderr) => 
