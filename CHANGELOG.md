@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.7
+
+- Fixed launching Beyond Compare on Linux
+
 ## 1.0.6
 
 - Comparing files in a remote workspace will now open temporary files in BC on the computer you're using rather than opening the files on the one you're accessing

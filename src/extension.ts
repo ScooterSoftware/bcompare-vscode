@@ -964,7 +964,14 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		if(BCPath === "bcomp")
 		{
-			return BCPath;
+			if(strOS === "linux")
+			{
+				return "bcompare";
+			}
+			else
+			{
+				return BCPath;
+			}
 		}else
 		{
 			return "\"" + BCPath + "\"";
