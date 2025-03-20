@@ -1,9 +1,9 @@
 {
-  "name": "bcompare-vscode",
-  "displayName": "Beyond Compare",
-  "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
-  "version": "1.0.7",
-  "publisher": "ScooterSoftware",
+  "name": "bcompare-vscode-remote",
+  "displayName": "Beyond Compare Remote",
+  "description": "Launch Beyond Compare in remote workspace with comparisons of files, folders, clipboards, and git repositories",
+  "version": "1.0.8",
+  "publisher": "johanlaneau",
   "contributors": [
     "Cal Shucha",
     {
@@ -12,11 +12,11 @@
       "url": "https://www.scootersoftware.com/"
     }
   ],
-  "icon": "./images/Logo.png",
+  "icon": "images/Logo.png",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ScooterSoftware/bcompare-vscode"
+    "url": "https://github.com/JohanLaneau/bcompare-vscode"
   },
   "keywords": [
     "compare",
@@ -26,9 +26,9 @@
   ],
   "qna": "https://forum.scootersoftware.com/",
   "bugs": {
-    "url": "https://github.com/ScooterSoftware/bcompare-vscode/issues"
+    "url": "https://github.com/JohanLaneau/bcompare-vscode/issues"
   },
-  "homepage": "https://github.com/ScooterSoftware/bcompare-vscode",
+  "homepage": "https://github.com/JohanLaneau/bcompare-vscode",
   "engines": {
     "vscode": "^1.83.0"
   },
@@ -38,7 +38,6 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "extensionKind": ["ui"],
   "main": "./out/extension.js",
   "capabilities": 
   {

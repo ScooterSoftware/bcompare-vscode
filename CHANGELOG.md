@@ -1,5 +1,9 @@
 # Change Log
 
+## 1.0.8
+- Forked from the official plugin
+- Changed the location of the extension to run on remote machines.
+
 ## 1.0.7
 
 - Fixed launching Beyond Compare on Linux
