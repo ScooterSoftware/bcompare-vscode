@@ -1,5 +1,15 @@
 # Change Log
 
+## 1.0.8
+
+- Added a setting to specify the path to the Beyond Compare 'bcomp' executable for cases where it isn't found automatically. This also adds support for windows portable installs
+- Added a Beyond Compare Output channel in VS Code for more verbose logging and communication to the user
+- Fixed an issue where temporary files retrieved from git might not have been fully written before Beyond Compare opens them
+- Removed the @vscode/windows-registry native dependency using the built in reg.exe instead
+- Updated eslint to a flatpack config
+- General clean up and organization
+- Updated dependencies. The minimum supported version of VSCode is now 1.107.0
+
 ## 1.0.7
 
 - Fixed launching Beyond Compare on Linux

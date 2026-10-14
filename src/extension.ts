@@ -1,83 +1,312 @@
-//A note on changing the order of items in a context menu:
-//To have full control of the order, all items in a menu should have a defined group
-//Note: the group is defined in package.json for each individual menu, not within the section where commands are defined
-//Items with the same group string will show up in the same "group" with groups divided by black bars
-//Groups will be added to the menu alphabetically
-//Group names aren't visible to the user (as far as I can tell), so they can be anything
-//By default, menu items will be ordered alphabetically by command/submenu name
-//To choose the order in which items appear, add "@#" to the end of the group string with # being the command's position in the menu
-//Items will still be in the same group even if they have different "@#" at the end of the group string
+/**
+ * Copyright (c) 2026 Scooter Software, Inc. All rights reserved.
+ * Licensed under the MIT License. See LICENSE file in the project root for details.
+ */
 
-//For example: to have menu item "foo" appear before menu item "bar" within a group named "general",
-//foo should have a group string of "general@1" and bar should have "general@2"
-
-//In order for a command to show up as a button next to the editor tabs, it must be in the "editor/title" menu
-//The associated command must have a defined icon, and its group must be "navigation"
-
-
-// ,
-// "configuration": {
-// 	"title": "Beyond Compare",
-// 	"properties": {
-// 	"bcompare-vscode.skipDefaultCompareTool": {
-// 		"type": "boolean",
-// 		"default": false,
-// 		"description": "Controls whether Beyond Compare is used instead of the built-in Diff Editor for standard comparison commands."
-// 	}
-// 	}
-// }
-
-
-import { exec } from 'child_process';
+import { exec, execFileSync } from 'node:child_process';
 import * as vscode from 'vscode';
 import fs from 'fs';
 import { simpleGit} from 'simple-git';
 import * as path from 'path';
-import * as vsWinReg from '@vscode/windows-registry';
 import * as os from 'node:os';
 
 let temporaryFiles: string[] = [];
 let leftPath = "";
 let globalState : vscode.Memento;
 
-// This method is called when the extension is activated
 export function activate(context: vscode.ExtensionContext) {
-
-	let blnLeftReadOnly = false;
-	let strLeftLabel = "";
-	let BCPath: string | undefined = 'bcomp';
-	const strOS = os.platform();
-	const BCLoadErrorMessage = "Error: Could not open Beyond Compare";
-	const extensionName = "bcompare-vscode";
 	globalState = context.globalState;
 
+	const strOS = os.platform();
+	const BCLoadErrorMessage = 'Error: Could not open Beyond Compare';
+	const extensionName = 'bcompare-vscode';
+
+	let blnLeftReadOnly = false;
+	let strLeftLabel = '';
+	let BCPath: string | undefined = 'bcomp';
+	let shouldIgnoreNextChange = false;
+	let exePathSettingTimer: NodeJS.Timeout | undefined;
+	let Logger: vscode.LogOutputChannel;
+
+	Logger = vscode.window.createOutputChannel('Beyond Compare', {log: true});
+	context.subscriptions.push(Logger);
+
+	Logger.debug(`${strOS} detected`);
+
 	readLeftPath();
+
+	/**
+	 * Listen for when focus is brought back to VS Code we need to update the leftPath var if it was used
+	 */
+	context.subscriptions.push(
+		vscode.window.onDidChangeWindowState(state => {
+			if (state.focused) {
+				readLeftPath();
+			}
+		})
+	);
 	
-	vscode.window.onDidChangeWindowState(state => { 
+	/**
+	 * Update the Beyond Compare executable path when the setting is changed
+	 */
+	context.subscriptions.push(
+		vscode.workspace.onDidChangeConfiguration(event => {
+			if (event.affectsConfiguration(extensionName +'.executablePath')) {
 
-		if (state.focused) 
-		{ 
-			readLeftPath();
+				// If we just manually called Update() don't do anything
+				if(shouldIgnoreNextChange) {
+					shouldIgnoreNextChange = false;
+					return;
+				}
+
+				if (exePathSettingTimer) {
+					clearTimeout(exePathSettingTimer);
+				}
+
+				// Using a timer to slow down updating as onDidChangeConfigured is fired for any change
+				exePathSettingTimer = setTimeout( () => {
+					const updatedValue = getConfiguredPath();
+					if (!updatedValue) { 
+						BCPath = 'bcomp';
+						return;
+					}
+					changeBCPath(updatedValue);
+				}, 500); // delay time in milliseconds
+			}
+		})
+	);
+
+	/**
+	 * Retrieve the user provided path from extension settings 
+	 * removing any quotes and leading/trailing whitespace/line endings
+	 * 
+	 * @returns string | undefied - User provided path, undefined if nothing provided
+	 */
+	function getConfiguredPath(): string | undefined {
+		return vscode.workspace.getConfiguration(extensionName).get<string>('executablePath')?.replaceAll('"', '')?.trim();
+	}
+
+	/**
+	 * Update user configured path setting to the currently defined BCPath
+	 */
+	function setConfiguredPath() {
+		shouldIgnoreNextChange = true;
+		vscode.workspace.getConfiguration(extensionName).update('executablePath', BCPath, true);
+	}
+	
+	/**
+	 * Updates the BCPath variable to the user provided path if a valid file and path is given
+	 * otherwise defaults to 'bcomp'
+	 * 
+	 * @param filePath - User provided path to change too
+	 */
+	function changeBCPath(filePath: string) {
+		Logger.info('Configured path found');
+
+		// Check for valid file path and file
+		if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+			BCPath = 'bcomp';
+			Logger.error(`Invalid Beyond Compare path: ${filePath}`);
+			return;
 		}
-	}); 
+		
+		// Get the filename to check for correct executable
+		const actualFilename = path.basename(filePath);
+		const lowerCaseFilename = actualFilename.toLowerCase();
 
-	// vscode.window.tabGroups.onDidChangeTabs(event => {
-	// 	if(event.opened.length >= 1 && vscode.workspace.getConfiguration("bcompare-vscode").skipDefaultCompareTool)
-	// 	{
-	// 		event.opened.forEach((tab) => {
-	// 			try //Try-catch in case another extension messes with things first
-	// 			{
-	// 				if(tab.input instanceof vscode.TabInputTextDiff)
-	// 				{	
-	// 					openFromDiffHelper(tab.input);
-	// 					vscode.window.tabGroups.close(tab);
-	// 				}
-	// 			}catch(e){}
-	// 		});
-	// 	}
-	// });
+		// Define system specific strings
+		let expected = '';
+		let gracefulSwitch = '';
+		let macOSTip = '';
 
+		switch (strOS) {
+			case 'win32':
+				expected = 'bcomp.exe';
+				gracefulSwitch = 'bcompare.exe';
+			break;
 
+			case 'darwin':
+				expected = 'bcomp';
+				gracefulSwitch = 'bcompare';
+				macOSTip = `use Beyond Compare's Install Command Line Tools command if you haven't`;
+			break;
+
+			case 'linux':
+				expected = 'bcompare';
+				gracefulSwitch = 'bcomp';
+			break;
+		}
+
+		if (lowerCaseFilename !== expected) {
+			Logger.warn(`${expected} expected, instead got: ${actualFilename}`);
+			// Gracefully switch to proper executable
+			if (lowerCaseFilename === gracefulSwitch) {
+				BCPath = filePath.replace(actualFilename, expected);
+				setConfiguredPath();
+			} else {
+				BCPath = 'bcomp';
+				Logger.error(`Invalid Beyond Compare path: ${filePath} ${macOSTip}`);
+				return;
+			}
+		} else {
+			BCPath = filePath;
+		}
+		Logger.info(`Path to Beyond Compare changed to: ${BCPath}`);
+	}
+
+	/**
+	 * Update BCPath, if needed, depending on the platform and settings
+	 */
+	function updateBCPath() {
+		if (BCPath === 'bcomp') {
+			// Check settings in case just launched or settings.json edited
+			const configured = getConfiguredPath();
+			if(configured) {
+				changeBCPath(configured);
+				return;
+			}
+
+			// Otherwise handle platform, macOS fall through
+			if (strOS === 'linux') {
+				BCPath = 'bcompare';
+			} else if (strOS === 'win32') {
+				readRegistry();
+			}
+		}
+	}
+
+	/**
+	 * Searches the windows registry for the defined Beyond Compare executable path in a few different locations.
+	 * If not found BCPath set to the default value of 'bcomp'.
+	 */
+	function readRegistry() : void {
+		const topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
+		const versionNumbers = ['', '5', '4', '3'];
+		const bcRegistryFolder = 'SOFTWARE\\Scooter Software\\Beyond Compare';
+
+		for (let folder of topFolders) {
+			for (let version of versionNumbers) {
+				try {
+					BCPath = readRegistryValue(folder, `${bcRegistryFolder} ${version}`, 'ExePath');
+					if (BCPath === undefined || BCPath === '') {
+						BCPath = 'bcomp';
+					} else {
+						BCPath = BCPath.replace('BCompare.exe', 'BComp.exe');
+						Logger.info(`Path found: ${BCPath}`);
+						break;
+					}
+				} catch {
+					BCPath = 'bcomp';
+				}	
+			}
+		}
+	}
+
+	/**
+	 * Reads a single value out of the Windows registry with reg.exe, which avoids needing a native module
+	 * 
+	 * @param hive - Top level root
+	 * @param key - Beyond Compare Folder
+	 * @param name - Subkey for executable path
+	 * @returns string | undefined - Registry Value if found otherwise undefined 
+	 */
+	function readRegistryValue(hive : string, key : string, name : string) : string | undefined {
+		try {
+			// Search with reg.exe - waiting until it returns and reading in stdout
+			const output = execFileSync(
+				'reg', ['query', `${hive}\\${key}`, '/v', name],
+				{encoding: 'utf8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore']}
+			);
+			Logger.debug(`Registry output found: ${output.trim()}`);
+
+			//Each value is printed as "    <name>    <type>    <data>", and the data may contain spaces
+			for (const line of output.split('\n')) {
+				let match = line.replace('\r', '').match(/^\s{2,}(\S+)\s{2,}(REG_\w+)\s{2,}(.*)$/);
+				if (match && match[1].toLowerCase() === name.toLowerCase()) {
+					let filePath = match[3];
+					// Validate this path is still valid
+					if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+						Logger.error(`Registry path found: ${filePath} but failed to validate`);
+						return undefined;
+					} else {
+						Logger.debug(`Registry path validated: ${filePath}`);
+						return filePath;
+					}
+				}
+			}
+		} catch {
+			Logger.error('reg.exe did not find a valid key/value pair for Beyond Compare');
+			return undefined;
+		}
+		return undefined;
+	}
+
+	/**
+	 * Open Beyond Compare with the passed information by running a commandline command
+	 * 
+	 * @param options - Commandline switches
+	 * @param names - Titles to be displayed in Beyond Compare's file path edits
+	 * @param files - File/Folder paths to be used
+	 */
+	async function openBC(options: string = '', names : string[], ...files: string[]) {
+
+		//Error: too many files or not enough names
+		if (files.length > 4 || files.length > names.length) {
+			Logger.error(`Can't open that many files in a comparison`);
+			return;
+		}
+
+		updateBCPath();
+
+		// Build a command string to pass to exec
+		let cmd = `\"${BCPath}\" `;
+
+		// Add file paths
+		for (const file of files) {
+			cmd += "\"" + file + "\" ";
+		}
+
+		// Format and add titles to be displayed in BC file path edits
+		for (let i = 0; i < files.length; i++) {
+			if (names[i] !== '') {
+				options += ' -title' + (i + 1) + '=\"' + names[i] + '\"';
+			}
+		}
+		cmd += options;
+
+		Logger.debug(`Attempting: ${cmd}`);
+		exec(cmd, (error,stdout,stderr) => {
+			if (error !== null) {
+				if (error.code !== undefined) {
+					if (stderr !== "" && strOS === 'darwin') {
+						vscode.window.showErrorMessage('Error: bcomp not found.  Launch Beyond Compare and use the Beyond Compare > Install Command Line Tools... menu to install it.');
+					} else if ((Number(error.code) > 102 || error.code === 100) || stderr !== '') {
+						Logger.error(`Is Beyond Compare installed?`);
+						vscode.window.showErrorMessage(BCLoadErrorMessage, 'Open Settings').then(answer => {
+							if (answer === 'Open Settings') {
+								vscode.commands.executeCommand('workbench.action.openSettings', extensionName + '.executablePath');
+							}
+						});
+					}
+				}
+			}
+			files.forEach(file => {
+				deleteFileIfTemp(file);
+			});
+		});
+	}
+
+	/**
+	 * Create a new command listener and to push it onto the disposables array
+	 * 
+	 * @param commandName: String - Name of the command to register 
+	 * @param fctn - functionality of the command to pass
+	 */
+	function registerCommand(commandName: string, fctn: (...args: any[]) => any) {
+		context.subscriptions.push(
+			vscode.commands.registerCommand(extensionName + commandName, fctn));
+	}
+	
 	registerCommand('.selectLeft', (a) =>
 	{
 		selectLeft(a);
@@ -116,7 +345,7 @@ export function activate(context: vscode.ExtensionContext) {
 				success = true;
 				leftFileName = a.fsPath;
 			}
-			
+
 		}else if(!vscode.window.activeTextEditor)
 		{
 			//Error no active text editor
@@ -142,12 +371,12 @@ export function activate(context: vscode.ExtensionContext) {
 			success = true;
 			leftFileName = vscode.window.activeTextEditor.document.fileName;
 		}
-		
+
 		if(success)
 		{
 			vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
 			vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
-			
+
 			vscode.window.showInformationMessage("Marked \"" + leftFileName + "\" as left file");
 		}
 	}
@@ -187,7 +416,7 @@ export function activate(context: vscode.ExtensionContext) {
 				rightLabel = a.fsPath;
 				blnRRO = true;
 			}
-			
+
 		}else if(!vscode.window.activeTextEditor)
 		{
 			//Error no active text editor
@@ -196,8 +425,8 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			//Error untitled
 			vscode.window.showErrorMessage(
-				"Error: Can not compare to " + 
-				vscode.window.activeTextEditor.document.fileName + 
+				"Error: Can not compare to " +
+				vscode.window.activeTextEditor.document.fileName +
 				" until it is saved");
 		}else if(vscode.window.activeTextEditor.document.uri.scheme === "file")
 		{
@@ -226,7 +455,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}
 
-	registerCommand('.selectLeftFolder', (a) => 
+	registerCommand('.selectLeftFolder', (a) =>
 	{
 		if(a)
 		{
@@ -276,7 +505,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function compareWithFile(a : any)
 	{
-		let options = 
+		let options =
 		{
 			canSelectFolders: false,
 			canSelectFiles: true,
@@ -323,7 +552,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	registerCommand('.compareWithFolder', (a) =>
 	{
-		let options = 
+		let options =
 		{
 			canSelectFolders: true,
 			canSelectFiles: false,
@@ -376,23 +605,23 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			//Error untitled
 			vscode.window.showErrorMessage(
-				"Error: Can not compare to " + 
-				vscode.window.activeTextEditor.document.fileName + 
+				"Error: Can not compare to " +
+				vscode.window.activeTextEditor.document.fileName +
 				" until it is saved");
 		}else
 		{
 			fullPath = vscode.window.activeTextEditor.document.fileName;
 			success = true;
 		}
-		
-		
+
+
 
 		if(!success)
 		{
 			return;
 		}
-		
-		let options = 
+
+		let options =
 		{
 			canSelectFolders: true,
 			canSelectFiles: false,
@@ -411,7 +640,7 @@ export function activate(context: vscode.ExtensionContext) {
 			var splitPath;
 
 			splitPath = path.split("\\");
-			
+
 			let folderPath = splitPath[0];
 			for(let intI = 1; intI < splitPath.length - 1; intI++)
 			{
@@ -458,9 +687,9 @@ export function activate(context: vscode.ExtensionContext) {
 							return;
 						}
 						vscode.window.showWarningMessage(
-							"\"" + splitPath[splitPath.length - 1] + 
+							"\"" + splitPath[splitPath.length - 1] +
 							'\" has not been changed since last save. Compare anyway?', "Yes", "No")
-							.then((answer, docPath : string = verifyIsString(fileName), document = doc) => 
+							.then((answer, docPath : string = verifyIsString(fileName), document = doc) =>
 							{
 								if(answer === "Yes" && document !== undefined)
 								{
@@ -518,8 +747,8 @@ export function activate(context: vscode.ExtensionContext) {
 				compareWithSaveHelper(aPath, aEditor);
 			}else
 			{
-				vscode.window.showWarningMessage("\"" + path.basename(a.path) + 
-				'\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer => 
+				vscode.window.showWarningMessage("\"" + path.basename(a.path) +
+				'\" has not been changed since last save. Compare anyway?', "Yes", "No").then(answer =>
 				{
 					if(answer === "Yes" && aEditor !== undefined)
 					{
@@ -572,7 +801,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
 
 		let uri : vscode.Uri;
-		
+
 		try
 		{
 			uri = await createRandomFile(selectedText);
@@ -598,7 +827,7 @@ export function activate(context: vscode.ExtensionContext) {
 		clearLeftPath();
 	});
 
-	registerCommand('.gitCompare', async (a) => 
+	registerCommand('.gitCompare', async (a) =>
 	{
 		if(a.type === undefined)
 		{
@@ -635,7 +864,7 @@ export function activate(context: vscode.ExtensionContext) {
 				let case0Staged: string | false = await gitCompareHelper(a.resourceUri.fsPath, ":./");
 				let case0Head: string | false = await gitCompareHelper(a.resourceUri.fsPath, "HEAD:./");
 
-				
+
 				let compareTarget = await vscode.window.showQuickPick(["Compare to head","Compare to current version"], {placeHolder: 'Compare to what?'});
 
 				if(compareTarget === undefined)
@@ -720,7 +949,7 @@ export function activate(context: vscode.ExtensionContext) {
 				options += " -lro";
 				fileLabel = verifyIsString(a.fsPath);
 			}
-			
+
 		}else if(!vscode.window.activeTextEditor)
 		{
 			//Error no active text editor
@@ -764,7 +993,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let selectedText = vscode.window.activeTextEditor.document.getText(selection);
 
 		let uri : vscode.Uri;
-		
+
 		try
 		{
 			uri = await createRandomFile(selectedText);
@@ -794,7 +1023,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	});
 
-	registerCommand('.launchBC', () => 
+	registerCommand('.launchBC', () =>
 	{
 		openBC("",[]);
 	});
@@ -831,7 +1060,7 @@ export function activate(context: vscode.ExtensionContext) {
 			{
 				let options = "";
 				if((items[0].scheme !== "file" || items[1].scheme !== "file"))//If an item is not a regular file
-				{	
+				{
 					if(!leftIsFile)//No folders
 					{
 						vscode.window.showErrorMessage("The comparison of non-local folders is not currently supported");
@@ -851,9 +1080,9 @@ export function activate(context: vscode.ExtensionContext) {
 						}
 					}
 				}
-				
+
 				openBC(options, ["",""], fileLeft, fileRight);
-				
+
 			}else
 			{
 				//Error: Can't compare files to directories
@@ -891,7 +1120,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let textContent = editor.getText();
 
 		let uri : vscode.Uri;
-		
+
 		try
 		{
 			uri = await createRandomFile(textContent, path.extname(filePath));
@@ -912,27 +1141,30 @@ export function activate(context: vscode.ExtensionContext) {
 		let directory = path.dirname(strPath);
 		let fileName = path.basename(strPath);
 		let filePath: string | false = false;
+		let writeDone: Promise<void> | undefined;
 
-		await simpleGit(directory).outputHandler((_command: any, standardOut: any) => 
-		{
+		await simpleGit(directory).outputHandler((_command: any, standardOut: any) => {
 			filePath = path.join(os.tmpdir(), rndName() + path.extname(strPath));
 			const writeStream = fs.createWriteStream(filePath);
-			standardOut.pipe(writeStream).on('close', () =>
-			{
-				if(filePath)
-				{
-					temporaryFiles.push(filePath);
-				}
+			writeDone = new Promise<void>(resolve => {
+				standardOut.pipe(writeStream).on('close', () => {
+					if (filePath) {
+						temporaryFiles.push(filePath);
+					}
+					resolve();
+				});
 			});
-		}).raw(["show", command + fileName]).catch((_error) =>
-		{
-			if(filePath)
-			{
+		}).raw(["show", command + fileName]).catch((_error) => {
+			if (filePath) {
 				fs.promises.unlink(filePath);
 			}
 			filePath = false;
 		});
 
+		// Ensure the file is fully written before it is handed to Beyond Compare
+		if(writeDone) {
+			await writeDone;
+		} 
 		return filePath;
 	}
 
@@ -953,122 +1185,11 @@ export function activate(context: vscode.ExtensionContext) {
 		{
 			return false;
 		}
-		
+
 		let returnPath = uri.fsPath;
 		temporaryFiles.push(returnPath);
 
 		return returnPath;
-	}
-
-	function bcPath() : string
-	{
-		if(BCPath === "bcomp")
-		{
-			if(strOS === "linux")
-			{
-				return "bcompare";
-			}
-			else
-			{
-				return BCPath;
-			}
-		}else
-		{
-			return "\"" + BCPath + "\"";
-		}
-	}
-
-	function readRegistry() : void
-	{
-		if(strOS === 'win32')
-		{
-			let topFolders: any[] = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
-			let versionNumbers = ['', ' 5', ' 4',' 3'];
-			for(var folder in topFolders)
-			{
-				if(BCPath !== 'bcomp')
-				{
-					break;
-				}
-				for(var version in versionNumbers)
-				{
-					const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
-					if(BCPath === 'bcomp')
-					{
-						try
-						{
-							BCPath = vsWinReg.GetStringRegKey(
-								topFolders[folder], bcRegistryFolder + versionNumbers[version], 'ExePath');
-							if(BCPath === undefined || BCPath === '')//if not found, reset to default
-							{
-								BCPath = 'bcomp';
-							}else
-							{
-								BCPath = BCPath.replace("BCompare.exe", "BComp.exe");
-								break;
-							}
-							
-						}catch
-						{
-							BCPath = 'bcomp';
-						}
-					}
-				}
-			}
-		}
-	}
-
-	async function openBC(options: string = "", names : string[], ...files: string[])
-	{
-		readRegistry();//Update path to BC (if on windows)
-
-		if(files.length > 4 || files.length > names.length)//Shouldn't ever be true
-		{
-			//Error: too many files or not enough names
-			vscode.window.showErrorMessage("Error: Can't open that many files in a comparison");
-			return;
-		}
-
-		let cmd = bcPath() + " ";
-
-		for(var file in files)
-		{
-			cmd += "\"" + files[file] + "\" ";
-		}
-
-		for(let i = 0; i < files.length; i++)
-		{
-			if(names[i] !== "")
-			{
-				options += " -title" + (i + 1) + "=\"" + names[i] + "\"";
-			}
-		}
-
-		cmd += options;
-
-		//Clear left file/folder
-
-		exec(cmd, (error,stdout,stderr) => 
-		{
-			if(error !== null)
-			{
-				if(error.code !== undefined)
-				{
-					if(stderr !== "" && strOS === "darwin")
-					{
-						vscode.window.showErrorMessage("Error: bcomp not found.  Launch Beyond Compare and use the Beyond Compare > Install Command Line Tools... menu to install it.");
-					}else if((error.code > 102 || error.code === 100) || stderr !== '')
-					{
-						vscode.window.showErrorMessage(BCLoadErrorMessage);
-					}
-				}
-			}
-			
-			files.forEach(file =>{
-				deleteFileIfTemp(file);
-			});
-
-		});
 	}
 
 	function rndName() {
@@ -1079,7 +1200,7 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		return name;
 	}
-	
+
 	function createRandomFile(contents = '', fileExtension = '.txt'): Thenable<vscode.Uri> {
 		return new Promise((resolve, reject) => {
 			const tmpFile = path.join(os.tmpdir(), rndName() + fileExtension);
@@ -1087,7 +1208,7 @@ export function activate(context: vscode.ExtensionContext) {
 				if (error) {
 					return reject(error);
 				}
-	
+
 				resolve(vscode.Uri.file(tmpFile));
 			});
 		});
@@ -1095,12 +1216,6 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function delay(ms: number) {
 		return new Promise( resolve => setTimeout(resolve, ms) );
-	}
-
-	function registerCommand(commandName: string, fctn: (...args: any[]) => any)
-	{
-		let command = vscode.commands.registerCommand(extensionName + commandName, fctn);
-		context.subscriptions.push(command);
 	}
 
 	function isPro(): boolean
@@ -1113,19 +1228,24 @@ export function activate(context: vscode.ExtensionContext) {
 				const bcRegistryFolder = "SOFTWARE\\Scooter Software\\Beyond Compare";
 				try
 				{
-					let strThreeWayCompareAllowed = vsWinReg.GetStringRegKey(
+					let strThreeWayCompareAllowed = readRegistryValue(
 						'HKEY_CURRENT_USER', bcRegistryFolder + versionNumbers[version], 'SupportsMerge');
 				
-					if(strThreeWayCompareAllowed === '\u0000')
+					if(strThreeWayCompareAllowed !== undefined)
 					{
-						return false;
-					}else if(strThreeWayCompareAllowed === '\u0001')
-					{
-						return true;
+						//reg.exe prints a DWORD in hexadecimal, as "0x0" or "0x1"
+						let intThreeWayCompareAllowed = Number(strThreeWayCompareAllowed);
+						if(intThreeWayCompareAllowed === 0)
+						{
+							return false;
+						}else if(intThreeWayCompareAllowed === 1)
+						{
+							return true;
+						}
 					}
 				}catch{}
 			}
-			
+
 			return true;
 		}
 
@@ -1174,7 +1294,7 @@ export function activate(context: vscode.ExtensionContext) {
 	{
 		let oldLeftPath = leftPath;
 		leftPath = strPath;
-		
+
 		if(globalState.get("leftIsPreserved"))//If the current left path is a temp file
 		{
 			let globalLeft = verifyIsString(globalState.get("leftPath"));
@@ -1290,7 +1410,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					openFromDiffHelper2(tabInput.original, leftFilePath);
 				}
-				
+
 				temporaryFiles.push(leftFilePath);
 				options += " -lro";
 				options += " -vcs1" + path.basename(tabInput.original.fsPath);
@@ -1303,7 +1423,7 @@ export function activate(context: vscode.ExtensionContext) {
 			let rightDiskCheck = await isUriSameAsDisk(tabInput.modified);
 			if(rightDiskCheck !== true)
 			{
-				
+
 				rightFilePath = extractExtAndMakeRandomFilePath(tabInput.modified.path);
 
 				try
@@ -1321,7 +1441,7 @@ export function activate(context: vscode.ExtensionContext) {
 				{
 					openFromDiffHelper2(tabInput.modified, rightFilePath);
 				}
-				
+
 				temporaryFiles.push(rightFilePath);
 				options += " -rro";
 				options += " -vcs2" + path.basename(tabInput.modified.fsPath);
@@ -1337,26 +1457,26 @@ export function activate(context: vscode.ExtensionContext) {
 
 	function getLabelForOpenFromDiff(uri : vscode.Uri) : string
 	{
-		let filename = path.basename(uri.fsPath); 
-		let title = filename; 
-		try 
-		{ 
-			if (uri.scheme === 'file') 
-			{ 
-				title = uri.fsPath; 
-			} 
-			else 
-			{ 
-				title = vscode.Uri.from({scheme: uri.scheme, authority: uri.authority, path: uri.path}).toString(true); 
-				if (uri.scheme === 'git') 
-				{ 
-						let gitQuery = JSON.parse(uri.query); 
-						title = title + ' @' + gitQuery.ref; 
-				} 
-			} 
-		} 
-		catch 
-		{ 
+		let filename = path.basename(uri.fsPath);
+		let title = filename;
+		try
+		{
+			if (uri.scheme === 'file')
+			{
+				title = uri.fsPath;
+			}
+			else
+			{
+				title = vscode.Uri.from({scheme: uri.scheme, authority: uri.authority, path: uri.path}).toString(true);
+				if (uri.scheme === 'git')
+				{
+						let gitQuery = JSON.parse(uri.query);
+						title = title + ' @' + gitQuery.ref;
+				}
+			}
+		}
+		catch
+		{
 			title = filename;
 		}
 
@@ -1368,7 +1488,7 @@ export function activate(context: vscode.ExtensionContext) {
 		let visibleEditors = vscode.window.visibleTextEditors;
 		for(let i = 0; i < visibleEditors.length; i++)
 		{
-			if(visibleEditors[i].document.uri.query === uri.query 
+			if(visibleEditors[i].document.uri.query === uri.query
 			&& visibleEditors[i].document.uri.fsPath === uri.fsPath)
 			{
 				let text = visibleEditors[i].document.getText();
@@ -1422,24 +1542,24 @@ export function activate(context: vscode.ExtensionContext) {
 		// let uri2stat = fs.statSync(uri2.fsPath).size;
 		// let uri1stat = (await vscode.workspace.fs.stat(uri1)).size;
 
-		if (fs.statSync(uri2.fsPath).size !== (await vscode.workspace.fs.stat(uri1)).size) 
-		{ 
-			return false; 
+		if (fs.statSync(uri2.fsPath).size !== (await vscode.workspace.fs.stat(uri1)).size)
+		{
+			return false;
 		}
 
-		const editorContent = await vscode.workspace.fs.readFile(uri1); 
+		const editorContent = await vscode.workspace.fs.readFile(uri1);
 		const diskContent = await vscode.workspace.fs.readFile(uri2);
 		if(editorContent.length !== diskContent.length)
 		{
 			return editorContent;
 		}
-		
-		for (let i = 0; i < editorContent.length; i++) 
-		{ 
-			if (editorContent[i] !== diskContent[i]) 
-			{ 
-				return editorContent; 
-			} 
+
+		for (let i = 0; i < editorContent.length; i++)
+		{
+			if (editorContent[i] !== diskContent[i])
+			{
+				return editorContent;
+			}
 		}
 		return true;
 	}

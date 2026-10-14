@@ -2,7 +2,7 @@
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare",
   "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "ScooterSoftware",
   "contributors": [
     "Cal Shucha",
@@ -12,7 +12,7 @@
       "url": "https://www.scootersoftware.com/"
     }
   ],
-  "icon": "./images/Logo.png",
+  "icon": "images/Logo.png",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -30,7 +30,7 @@
   },
   "homepage": "https://github.com/ScooterSoftware/bcompare-vscode",
   "engines": {
-    "vscode": "^1.83.0"
+    "vscode": "^1.107.0"
   },
   "categories": [
     "Other"
@@ -38,21 +38,31 @@
   "activationEvents": [
     "onStartupFinished"
   ],
-  "extensionKind": ["ui"],
+  "extensionKind": [
+    "ui"
+  ],
   "main": "./out/extension.js",
-  "capabilities": 
-  {
-    "virtualWorkspaces": 
-    {
+  "capabilities": {
+    "virtualWorkspaces": {
       "supported": "limited",
       "description": "Some types of virtual documents can not be opened in Beyond Compare"
     },
-    "untrustedWorkspaces": 
-    {
+    "untrustedWorkspaces": {
       "supported": true
     }
   },
   "contributes": {
+    "configuration": {
+      "title": "Beyond Compare",
+      "properties": {
+        "bcompare-vscode.executablePath": {
+          "type": "string",
+          "default": "",
+          "scope": "machine",
+          "markdownDescription": "Fully qualified path to the ```bcomp``` executable. This is optional and usually detected automatically, except for windows portable BC installs. \n\n If you're on macOS and having troubles, use Beyond Compare's ```Beyond Compare > Install Command Line Tools``` command first. \n\n Example paths: \n\n - Windows: ```C:\\Program Files\\Beyond Compare 5\\bcomp.exe``` \n\n - Linux: ```/usr/bin/bcompare``` \n\n - macOS: ```/usr/local/bin/bcomp```"
+        }
+      }
+    },
     "commands": [
       {
         "command": "bcompare-vscode.launchBC",
@@ -422,19 +432,18 @@
     "test": "node ./out/test/runTest.js"
   },
   "devDependencies": {
-    "@types/mocha": "^10.0.3",
-    "@types/node": "18.x",
-    "@types/vscode": "^1.83.0",
-    "@typescript-eslint/eslint-plugin": "^6.9.0",
-    "@typescript-eslint/parser": "^6.9.0",
-    "@vscode/test-electron": "^2.3.6",
-    "eslint": "^8.52.0",
-    "glob": "^10.3.10",
-    "mocha": "^10.2.0",
-    "typescript": "^5.2.2"
+    "@types/mocha": "^10.0.10",
+    "@types/node": "26.6.5",
+    "@types/vscode": "1.107.0",
+    "@vscode/test-electron": "^3.1.0",
+    "@vscode/vsce": "^3.9.2",
+    "eslint": "^10.12.0",
+    "glob": "^13.0.6",
+    "mocha": "^11.8.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.71.2"
   },
   "dependencies": {
-    "@vscode/windows-registry": "^1.1.0",
-    "simple-git": "^3.21.0"
+    "simple-git": "^3.36.0"
   }
 }

@@ -8,6 +8,14 @@ This extension allows you to open Beyond Compare directly from VSCode in several
 - macOS: **bcomp** command line tool must be installed.  Within Beyond Compare use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
 - Compatible with Visual Studio Code for Windows, macOS, and Linux.
 
+## User Settings
+
+Executable Path - Optional setting to provide a path to the Beyond Compare executable
+
+## Output Channel
+
+View > Output, change the output channel in the drop down menu to Beyond Compare. Debug logging can be turned on with the settings cog wheel.
+
 ## Commands
 
 - [Compare two open files](#compare-two-open-files)
