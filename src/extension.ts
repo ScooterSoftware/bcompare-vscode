@@ -177,24 +177,24 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	/**
-	 * Searches the windows registry for the defined Beyond Compare executable path in a few different locations.
-	 * If not found BCPath set to the default value of 'bcomp'.
+	 * Searches the windows registry for the defined Beyond Compare executable path.
+	 * Prioritizes HKCU root and un-versioned "Beyond Compare" subfolder
 	 */
 	function readRegistry() : void {
-		const topFolders = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
+		const roots = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
 		const versionNumbers = ['', '5', '4', '3'];
 		const bcRegistryFolder = 'SOFTWARE\\Scooter Software\\Beyond Compare';
 
-		for (let folder of topFolders) {
-			for (let version of versionNumbers) {
+		versionLoop: for (let version of versionNumbers) {
+			for (let root of roots) {
 				try {
-					BCPath = readRegistryValue(folder, `${bcRegistryFolder} ${version}`, 'ExePath');
+					BCPath = readRegistryValue(root, `${bcRegistryFolder} ${version}`, 'ExePath');
 					if (BCPath === undefined || BCPath === '') {
 						BCPath = 'bcomp';
 					} else {
 						BCPath = BCPath.replace('BCompare.exe', 'BComp.exe');
 						Logger.info(`Path found: ${BCPath}`);
-						break;
+						break versionLoop;
 					}
 				} catch {
 					BCPath = 'bcomp';
