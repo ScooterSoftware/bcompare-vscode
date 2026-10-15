@@ -141,7 +141,8 @@ export function activate(context: vscode.ExtensionContext) {
 			Logger.warn(`${expected} expected, instead got: ${actualFilename}`);
 			// Gracefully switch to proper executable
 			if (lowerCaseFilename === gracefulSwitch) {
-				BCPath = filePath.replace(actualFilename, expected);
+				const dir = path.dirname(filePath);
+				BCPath = path.join(dir, expected);
 				setConfiguredPath();
 			} else {
 				BCPath = 'bcomp';
@@ -252,6 +253,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 		//Error: too many files or not enough names
 		if (files.length > 4 || files.length > names.length) {
+			vscode.window.showErrorMessage("Error: Can't open that many files in a comparison");
 			Logger.error(`Can't open that many files in a comparison`);
 			return;
 		}
