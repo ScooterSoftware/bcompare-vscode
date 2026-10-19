@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See LICENSE file in the project root for details.
  */
 
-import { exec, execFileSync } from 'node:child_process';
+import { execFile, execFileSync } from 'node:child_process';
 import * as vscode from 'vscode';
 import fs from 'fs';
 import { simpleGit} from 'simple-git';
@@ -23,7 +23,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let blnLeftReadOnly = false;
 	let strLeftLabel = '';
-	let BCPath: string | undefined = 'bcomp';
+	let BCPath: string = 'bcomp';
 	let shouldIgnoreNextChange = false;
 	let exePathSettingTimer: NodeJS.Timeout | undefined;
 	let Logger: vscode.LogOutputChannel;
@@ -184,22 +184,27 @@ export function activate(context: vscode.ExtensionContext) {
 		const roots = ['HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE'];
 		const versionNumbers = ['', '5', '4', '3'];
 		const bcRegistryFolder = 'SOFTWARE\\Scooter Software\\Beyond Compare';
+		let foundPath: string | undefined;
 
 		versionLoop: for (let version of versionNumbers) {
 			for (let root of roots) {
 				try {
-					BCPath = readRegistryValue(root, `${bcRegistryFolder} ${version}`, 'ExePath');
-					if (BCPath === undefined || BCPath === '') {
-						BCPath = 'bcomp';
-					} else {
-						BCPath = BCPath.replace('BCompare.exe', 'BComp.exe');
+					foundPath = readRegistryValue(root, `${bcRegistryFolder} ${version}`, 'ExePath');
+					if (foundPath) {
+						const dir = path.dirname(foundPath);
+						BCPath = path.join(dir, 'bcomp.exe');
 						Logger.info(`Path found: ${BCPath}`);
 						break versionLoop;
+					} else {
+						BCPath = 'bcomp';	
 					}
 				} catch {
 					BCPath = 'bcomp';
 				}	
 			}
+		}
+		if (BCPath === 'bcomp') {
+			Logger.error('reg.exe did not find a valid key/value pair for Beyond Compare');
 		}
 	}
 
@@ -236,7 +241,6 @@ export function activate(context: vscode.ExtensionContext) {
 				}
 			}
 		} catch {
-			Logger.error('reg.exe did not find a valid key/value pair for Beyond Compare');
 			return undefined;
 		}
 		return undefined;
@@ -260,41 +264,34 @@ export function activate(context: vscode.ExtensionContext) {
 
 		updateBCPath();
 
-		// Build a command string to pass to exec
-		let cmd = `\"${BCPath}\" `;
-
-		// Add file paths
-		for (const file of files) {
-			cmd += "\"" + file + "\" ";
-		}
-
-		// Format and add titles to be displayed in BC file path edits
-		for (let i = 0; i < files.length; i++) {
+		let args: string[] = [...files];
+		for (let i=0; i < files.length; i++) {
 			if (names[i] !== '') {
-				options += ' -title' + (i + 1) + '=\"' + names[i] + '\"';
+				args.push(`-title${i+1}=${names[i]}`);
 			}
 		}
-		cmd += options;
+		
+		Logger.debug(`Attempting: ${BCPath} ${args.join(' ')}`);
 
-		Logger.debug(`Attempting: ${cmd}`);
-		exec(cmd, (error,stdout,stderr) => {
-			if (error !== null) {
-				if (error.code !== undefined) {
-					if (stderr !== "" && strOS === 'darwin') {
-						vscode.window.showErrorMessage('Error: bcomp not found.  Launch Beyond Compare and use the Beyond Compare > Install Command Line Tools... menu to install it.');
-					} else if ((Number(error.code) > 102 || error.code === 100) || stderr !== '') {
-						Logger.error(`Is Beyond Compare installed?`);
-						vscode.window.showErrorMessage(BCLoadErrorMessage, 'Open Settings').then(answer => {
-							if (answer === 'Open Settings') {
-								vscode.commands.executeCommand('workbench.action.openSettings', extensionName + '.executablePath');
-							}
-						});
-					}
-				}
+		execFile(BCPath, args, (error,stdout,stderr) => {
+			if (error) { 
+				if ((typeof error.code === 'number' && (error.code > 102 || error.code === 100)) || typeof error.code === 'string') {
+					Logger.error(`System message: ${error.message} Code: ${error.code}`);
+					let macOSError = '';
+					if (strOS === 'darwin') {
+						macOSError = 'Launch Beyond Compare and use the Beyond Compare > Install Command Line Tools... menu to install it.';
+					}	
+					Logger.error('Is Beyond Compare installed?');
+					vscode.window.showErrorMessage(`${BCLoadErrorMessage} ${macOSError}`, 'Open Settings').then(answer => {
+						if (answer === 'Open Settings') {
+							vscode.commands.executeCommand('workbench.action.openSettings', extensionName + '.executablePath');
+						}
+					});
+				} 
 			}
 			files.forEach(file => {
 				deleteFileIfTemp(file);
-			});
+			});	
 		});
 	}
 
