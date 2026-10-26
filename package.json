@@ -113,19 +113,19 @@
       },
       {
         "command": "bcompare-vscode.selectLeftText",
-        "title": "Select Highlighted Text as Left File",
+        "title": "Select Text as Left File",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection"
       },
       {
         "command": "bcompare-vscode.compareWithLeftText",
-        "title": "Compare Highlighted Text with Left File",
+        "title": "Compare Text to Left File",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection && bcompare-vscode.leftSelected"
       },
       {
         "command": "bcompare-vscode.gitCompare",
-        "title": "Compare to git with BC",
+        "title": "Compare to Git in Beyond Compare",
         "enablement": "scmProvider == git"
       },
       {
@@ -152,12 +152,12 @@
       },
       {
         "command": "bcompare-vscode.compareFileToClipboard",
-        "title": "Compare to Clipboard Contents",
+        "title": "Compare to Clipboard",
         "category": "Beyond Compare"
       },
       {
         "command": "bcompare-vscode.compareTextToClipboard",
-        "title": "Compare Text to Clipboard Contents",
+        "title": "Compare Text to Clipboard",
         "category": "Beyond Compare",
         "enablement": "editorHasSelection"
       },

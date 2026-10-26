@@ -474,8 +474,8 @@ export function activate(context: vscode.ExtensionContext) {
         let options = {
             canSelectFolders: false,
             canSelectFiles: true,
-            openLabel: 'Compare',
-            title: 'Compare',
+            openLabel: 'Open',
+            title: 'Select Right File for Compare',
         };
 
         let promise = vscode.window.showOpenDialog(options);
@@ -512,8 +512,8 @@ export function activate(context: vscode.ExtensionContext) {
         let options = {
             canSelectFolders: true,
             canSelectFiles: false,
-            openLabel: 'Compare',
-            title: 'Compare',
+            openLabel: 'Open',
+            title: 'Select Right Folder for Compare',
         };
 
         let promise = vscode.window.showOpenDialog(options);
@@ -566,8 +566,8 @@ export function activate(context: vscode.ExtensionContext) {
         let options = {
             canSelectFolders: true,
             canSelectFiles: false,
-            openLabel: 'Compare',
-            title: 'Compare',
+            openLabel: 'Open',
+            title: 'Select Right Folder for Compare',
         };
 
         let promise = vscode.window.showOpenDialog(options);
@@ -716,8 +716,8 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', true);
         vscode.commands.executeCommand('setContext', extensionName + '.leftFolderSelected', false);
         temporaryFiles.push(tempPath);
-        writeLeftPath(fs.realpathSync(tempPath), true, 'Left Text');
-        vscode.window.showInformationMessage('Highlighted section selected as left file');
+        writeLeftPath(fs.realpathSync(tempPath), true, `Selection at ${new Date().toLocaleTimeString()}`);
+        vscode.window.showInformationMessage('Text marked as left file');
     });
 
     registerCommand('.compareWithLeftText', async () => {
@@ -748,7 +748,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
 
         vscode.commands.executeCommand('setContext', extensionName + '.leftSelected', false);
-        openBC(options, [strLeftLabel, 'Right Text'], leftPath, rightPath);
+        openBC(options, [strLeftLabel, `Selection at ${new Date().toLocaleTimeString()}`], leftPath, rightPath);
         clearLeftPath();
     });
 
@@ -897,7 +897,12 @@ export function activate(context: vscode.ExtensionContext) {
             if (clipboardPath === false) {
                 vscode.window.showErrorMessage('Error: Clipboard does not contain readable text');
             } else {
-                openBC(options, [fileLabel, 'Clipboard Contents'], comparePath, clipboardPath);
+                openBC(
+                    options,
+                    [fileLabel, `Clipboard at ${new Date().toLocaleTimeString()}`],
+                    comparePath,
+                    clipboardPath,
+                );
             }
         }
     });
@@ -928,7 +933,8 @@ export function activate(context: vscode.ExtensionContext) {
             if (clipboardPath === false) {
                 vscode.window.showErrorMessage('Error: Clipboard does not contain readable text');
             } else {
-                openBC('-ro', ['Highlighted Text', 'Clipboard Contents'], comparePath, clipboardPath);
+                const currentTime = new Date().toLocaleTimeString();
+                openBC('-ro', [`Selection at ${currentTime}`, `Clipboard at ${currentTime}`], comparePath, clipboardPath);
             }
         } else {
             //Should never happen

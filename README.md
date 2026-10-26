@@ -1,96 +1,63 @@
-# Open files in Beyond Compare directly from VSCode
+# Open Files in Beyond Compare Directly from VS Code
 
-This extension allows you to open Beyond Compare directly from VSCode in several useful ways.
+An intuitive extension to seamlessly launch [Beyond Compare](https://www.scootersoftware.com/) directly from the VS Code menus, sidebars, and open tabs
 
 ## Requirements
 
-- Beyond Compare must be installed.
-- macOS: **bcomp** command line tool must be installed.  Within Beyond Compare use the **Beyond Compare > Install Command Line Tools...** menu command to install it.
-- Compatible with Visual Studio Code for Windows, macOS, and Linux.
+- **Beyond Compare** must be installed.
+- **macOS Users:** The `bcomp` command line tool must be installed. In Beyond Compare, pick **Beyond Compare > Install Command Line Tools...** to enable it.
+- Compatible with Visual Studio Code on Windows, macOS, and Linux
 
-## Commands
+---
 
-- [Compare two open files](#compare-two-open-files)
-- [Compare highlighted text](#compare-highlighted-text)
-- [Compare folders](#compare-folders)
-- [Compare files to non-open files](#compare-files-to-non-open-files)
-- [Compare parent to folder](#compare-parent-to-folder)
-- [Compare to saved version](#compare-to-saved-version)
-- [Compare to git repository](#compare-to-git-repository)
-- [Compare selected](#compare-selected)
-- [Compare to clipboard](#compare-to-clipboard)
-- [Open Beyond Compare from Diff Editor](#open-beyond-compare-from-diff-editor)
+## Quick Demo
 
-### Compare two open files
-Use this option to select a file for comparison.
+![Extension Demo](images/Demo.gif)
 
-![Select a left file](images/SelectLeft.PNG)
+---
 
-And then pick another file to compare it to.
+## Features & Usage
 
-![Select a right file](images/CompareToLeft.PNG)
+### File Comparisons
 
-You can also right-click on files in the File Explorer.
+- **Open Files:** Right-click an open tab or a file in the Explorer view, and pick `Select Left File`. Then right-click a second file and pick `Compare to Left File`.
+- **Multiple Items:** Select two files or folders in the Explorer view, right-click, and pick `Compare Selected Items`.
+- **Live Edits:** Right-click an open tab with unsaved modifications and pick `Compare to Last Save`.
+- **External Files:** Right-click an open file and pick `Compare to File...` to open a native file dialog. Then pick a file from the local system.
 
-### Compare highlighted text
-Use this option to select the highlighted text for comparison, and then another selection of text to begin the comparison.
+### Text & Clipboard Comparisons
 
-![Select text for comparison](images/SelectLeftText.PNG)
+- **Text Selections:** Right-click a selected block of text in an open tab and pick `Select Text as Left File`. Then right-click a second block of text and pick `Compare Text to Left File`. To compare a file with a block of text, pick the file first.
+- **Clipboard Integration:** Right-click an open tab and pick `Compare to Clipboard`. Right-click a block of text and pick `Compare Text to Clipboard`.
 
-Text can also be compared to files by selecting a file for comparison first.
+### Folder Comparisons
 
-### Compare folders
-Use this option to select a folder for comparison, and then another folder to begin the comparison.
+- **Open Folders:** Right-click a folder in the Explorer view and pick `Select Left Folder`. Then right-click a second folder and pick `Compare to Left Folder`.
+- **External Folders:** Right-click a folder and pick `Compare to Folder...` to open a native folder dialog. Then pick a folder from the local system.
+- **Parent Folders:** Right-click an open file and pick `Compare Parent to Folder...` to open a native folder dialog. Then pick a folder from the local system to be compared with the folder containing the open file.
 
-![Select a folder for comparison](images/SelectLeftFolder.PNG)
+### Git Integration & Diff Auditing
 
-### Compare files to non-open files 
-Use this option to compare a file you pick with an open dialog.
+- **Branch & Stage Audits:** Right-click files in the Source Control view and pick `Compare to Git in Beyond Compare` to instantly review modified files.
+    - **Multi-State Flexibility:** Audit unstaged changes against the last commit, staged changes against the last commit, or new unstaged edits directly against the current staged changes.
+- **Native Diff Upgrades:** Click the `Open Diff in Beyond Compare` button on the Diff Editor toolbar.
 
-![Select a file for comparison](images/CompareToFile1.PNG)
-![And then another file to compare it to](images/CompareToFile2.PNG)
+---
 
-A similar option exists for folders in the File Explorer.
+## Configuration
 
-### Compare parent to folder
-Use this option to choose a file and compare the folder it's in to another folder with an open dialog.
+The extension works automatically if Beyond Compare is installed in its default system location. Configure the executable path in extension settings when using a portable version, custom directory, or experiencing issues launching Beyond Compare.
 
-![Select a file's parent for comparison](images/ParentToFolder.PNG)
-
-### Compare to saved version
-Use this option to compare the version of a file you have open in the editor to the version stored on disk.
-
-![Compare a file to the saved version](images/CompareToSave.PNG)
-
-### Compare to git repository
-Use this option to compare staged or unstaged changes to the last commit in the current branch or compare staged changes to unstaged changes.
-
-![Compare a file to git repository](images/GitCompare.PNG)
-
-### Compare Selected
-Use this option to compare 2 selected files or folders from the File Explorer.
-
-![Compare 2 files or folders from the File Explorer](images/CompareSelected.PNG)
-
-### Compare to Clipboard
-Use this option to compare the text on your clipboard to an open file.
-
-![Compare text to an open file](images/CompareFileToClipboard.PNG)
-
-Or to a highlighted selection of text.
-
-![Compare text to your clipboard](images/CompareTextToClipboard.PNG)
-
-### Open Beyond Compare from Diff Editor
-Use this button when you have a comparison open in VSCode to open it in Beyond Compare.
-
-![Open a comparison in Beyond Compare](images/OpenCompare.PNG)
-
-## User Settings
-
-**Executable Path** - Optional setting to provide a path to the Beyond Compare executable
+---
 
 ## Support
 
-Any unexpected behavior can be submitted via Github or emailed to support@scootersoftware.com 
-The Beyond Compare output channel in VS Code can enable debug logging with the settings cogwheel.
+- **Bug Reports:** Submit unexpected behaviors or feature requests directly through our GitHub Issues page.
+- **Email Support:** Contact the team directly at support@scootersoftware.com.
+- **Debug Logs:** Verbose logging can by enabled by opening the Beyond Compare Output Channel and using the settings cogwheel panel inside VS Code.
+
+---
+
+## License
+
+[MIT](LICENSE)
