@@ -853,7 +853,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    registerCommand('.compareSelected', (...a) => {
+    registerCommand('.compareTwoFiles', (...a) => {
+        compareSelected(a);
+    });
+
+    registerCommand('.compareTwoFolders', (...a) => {
         compareSelected(a);
     });
 
@@ -934,7 +938,12 @@ export function activate(context: vscode.ExtensionContext) {
                 vscode.window.showErrorMessage('Error: Clipboard does not contain readable text');
             } else {
                 const currentTime = new Date().toLocaleTimeString();
-                openBC('-ro', [`Selection at ${currentTime}`, `Clipboard at ${currentTime}`], comparePath, clipboardPath);
+                openBC(
+                    '-ro',
+                    [`Selection at ${currentTime}`, `Clipboard at ${currentTime}`],
+                    comparePath,
+                    clipboardPath,
+                );
             }
         } else {
             //Should never happen

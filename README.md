@@ -21,20 +21,24 @@ An intuitive extension to seamlessly launch [Beyond Compare](https://www.scooter
 ### File Comparisons
 
 - **Open Files:** Right-click an open tab or a file in the Explorer view, and pick `Select Left File`. Then right-click a second file and pick `Compare to Left File`.
-- **Multiple Items:** Select two files or folders in the Explorer view, right-click, and pick `Compare Selected Items`.
 - **Live Edits:** Right-click an open tab with unsaved modifications and pick `Compare to Last Save`.
 - **External Files:** Right-click an open file and pick `Compare to File...` to open a native file dialog. Then pick a file from the local system.
-
-### Text & Clipboard Comparisons
-
-- **Text Selections:** Right-click a selected block of text in an open tab and pick `Select Text as Left File`. Then right-click a second block of text and pick `Compare Text to Left File`. To compare a file with a block of text, pick the file first.
-- **Clipboard Integration:** Right-click an open tab and pick `Compare to Clipboard`. Right-click a block of text and pick `Compare Text to Clipboard`.
 
 ### Folder Comparisons
 
 - **Open Folders:** Right-click a folder in the Explorer view and pick `Select Left Folder`. Then right-click a second folder and pick `Compare to Left Folder`.
 - **External Folders:** Right-click a folder and pick `Compare to Folder...` to open a native folder dialog. Then pick a folder from the local system.
 - **Parent Folders:** Right-click an open file and pick `Compare Parent to Folder...` to open a native folder dialog. Then pick a folder from the local system to be compared with the folder containing the open file.
+
+### Multiple Selections
+
+- **Multiple Files:** Select two files in the Explorer view, right-click, and pick `Compare Selected Files`.
+- **Multiple Folders:** Select two folders in the Explorer view, right-click, and pick `Compare Selected Folders`.
+
+### Text & Clipboard Comparisons
+
+- **Text Selections:** Right-click a selected block of text in an open tab and pick `Select Text as Left File`. Then right-click a second block of text and pick `Compare Text to Left File`. To compare a file with a block of text, pick the file first.
+- **Clipboard Integration:** Right-click an open tab and pick `Compare to Clipboard`. Right-click a block of text and pick `Compare Text to Clipboard`.
 
 ### Git Integration & Diff Auditing
 

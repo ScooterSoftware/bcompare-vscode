@@ -2,13 +2,16 @@
 
 ## 1.0.8
 
-- Added a setting to specify the path to the Beyond Compare 'bcomp' executable for cases where it isn't found automatically. This also adds support for windows portable installs
-- Added a Beyond Compare Output channel in VS Code for more verbose logging and communication to the user
-- Fixed an issue where temporary files retrieved from git might not have been fully written before Beyond Compare opens them
-- Removed the @vscode/windows-registry native dependency using the built in reg.exe instead
-- Updated eslint to a flatpack config
-- General clean up and organization
-- Updated dependencies. The minimum supported version of VSCode is now 1.107.0
+- Added an optional setting to provide a path to the Beyond Compare 'bcomp' executable for cases where it is not found automatically. This also adds support for Windows portable installs and multiple Beyond Compare installations
+- Added a Beyond Compare output channel in VS Code for more verbose logging and communication
+- Split the 'Compare Selected Items' command into 'Compare Selected Files' and 'Compare Selected Folders'
+- Changed the Git command text to 'Compare to Git in Beyond Compare'
+- Changed the file/folder browse dialog titles to 'Select Right File/Folder for Compare'
+- Changed the text selection and clipboard titles passed to Beyond Compare to include the current system time
+- Updated the readme file contents
+- Updated dependencies, the minimum supported version of VS Code is now 1.107.0
+- Fixed an issue where temporary files retrieved from Git might not have been fully written before Beyond Compare opens them
+- General improvements and security updates
 
 ## 1.0.7
 
@@ -22,7 +25,7 @@
 - When comparing a staged file to the git head, the modified version now appears on the right rather than the left
 - In most cases, when opening a temp file, BC will now display a more appropriate name (ex. when comparing to clipboard, the contents of the clipboard will be labeled "Clipboard Contents" instead of the randomly generated file name)
 - Invoking "Compare with last save" by right clicking a tab no longer cycles through all open tabs unless the tab isn't active
-- Temporary files created by the extension are now deleted as soon as they are done being used rather than when VSCode is closed
+- Temporary files created by the extension are now deleted as soon as they are done being used rather than when VS Code is closed
 - If a virtual file has a version stored on disk and the two are identical (for example, a git virtual file of the latest revision), using "Open Diff in Beyond Compare" will try to open the version on disk rather than a read only copy. This isn't possible with some types of virtual files, such as the kind created by the "Git Graph" extension.
 - If at least one side of a diff tab has unsaved changes, using "Open Diff in Beyond Compare" will prompt you to chose whether you want to open the saved versions or the edited versions
 - The extension will now work in untrusted workspaces
@@ -57,4 +60,3 @@
 ## 1.0.0
 
 - Initial release
-

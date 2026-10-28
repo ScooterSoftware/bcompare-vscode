@@ -1,7 +1,7 @@
 {
   "name": "bcompare-vscode",
   "displayName": "Beyond Compare",
-  "description": "Launch Beyond Compare with comparisons of files, folders, clipboards, and git repositories",
+  "description": "Launch Beyond Compare to compare files, folders, text blocks, clipboards, and Git repositories",
   "version": "1.0.8",
   "publisher": "ScooterSoftware",
   "contributors": [
@@ -109,7 +109,8 @@
       {
         "command": "bcompare-vscode.compareWithSave",
         "title": "Compare to Last Save",
-        "category": "Beyond Compare"
+        "category": "Beyond Compare",
+        "enablement": "activeEditorIsDirty"
       },
       {
         "command": "bcompare-vscode.selectLeftText",
@@ -145,9 +146,15 @@
         "category": "Beyond Compare"
       },
       {
-        "command": "bcompare-vscode.compareSelected",
-        "title": "Compare Selected Items",
-        "enablement": "listDoubleSelection === true",
+        "command": "bcompare-vscode.compareTwoFiles",
+        "title": "Compare Selected Files",
+        "enablement": "listDoubleSelection === true && !explorerResourceIsFolder && resourceScheme === file",
+        "category": "Beyond Compare"
+      },
+      {
+        "command": "bcompare-vscode.compareTwoFolders",
+        "title": "Compare Selected Folders",
+        "enablement": "listDoubleSelection === true && explorerResourceIsFolder",
         "category": "Beyond Compare"
       },
       {
@@ -253,7 +260,12 @@
       ],
       "explorerMultiContextCompare": [
         {
-          "command": "bcompare-vscode.compareSelected",
+          "command": "bcompare-vscode.compareTwoFiles",
+          "when": "listDoubleSelection === true",
+          "group": "general@1"
+        },
+        {
+          "command": "bcompare-vscode.compareTwoFolders",
           "when": "listDoubleSelection === true",
           "group": "general@1"
         },
@@ -436,15 +448,15 @@
     "@types/node": "26.6.5",
     "@types/vscode": "1.107.0",
     "@vscode/test-electron": "^3.1.0",
-    "@vscode/vsce": "^3.9.2",
-    "eslint": "^10.12.0",
+    "@vscode/vsce": "^4.1.0",
+    "eslint": "^10.13.0",
     "glob": "^13.0.6",
-    "mocha": "^11.8.0",
+    "mocha": "^12.0.3",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.71.2"
+    "typescript-eslint": "^8.72.1"
   },
   "dependencies": {
-    "simple-git": "^3.36.0"
+    "simple-git": "^4.0.2"
   }
 }
