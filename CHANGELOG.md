@@ -2,12 +2,15 @@
 
 ## 1.0.8
 
-- Added an optional setting to provide a path to the Beyond Compare 'bcomp' executable for cases where it is not found automatically. This also adds support for Windows portable installs and multiple Beyond Compare installations
+- Added an optional setting to provide a path to the Beyond Compare "bcomp" executable for cases where it is not found automatically. This also adds support for Windows portable installs and multiple Beyond Compare installations
 - Added a Beyond Compare output channel in VS Code for more verbose logging and communication
-- Split the 'Compare Selected Items' command into 'Compare Selected Files' and 'Compare Selected Folders'
-- Changed the Git command text to 'Compare to Git in Beyond Compare'
-- Changed the file/folder browse dialog titles to 'Select Right File/Folder for Compare'
+- Changed "Select Highlighted Text as Left File" to "Select Text as Left File"
+- Changed "Compare Highlighted Text with Left File" to "Compare Text to Left File"
+- Changed the Git command text to "Compare to Git in Beyond Compare"
+- Changed the file/folder browse dialog titles to "Select Right File/Folder for Compare"
 - Changed the text selection and clipboard titles passed to Beyond Compare to include the current system time
+- Shortened "Clipboard Contents" commands text to "Clipboard"
+- The "Compare to Last Save" command now disables when no unsaved edits are detected
 - Updated the readme file contents
 - Updated dependencies, the minimum supported version of VS Code is now 1.107.0
 - Fixed an issue where temporary files retrieved from Git might not have been fully written before Beyond Compare opens them

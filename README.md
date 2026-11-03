@@ -32,8 +32,8 @@ An intuitive extension to seamlessly launch [Beyond Compare](https://www.scooter
 
 ### Multiple Selections
 
-- **Multiple Files:** Select two files in the Explorer view, right-click, and pick `Compare Selected Files`.
-- **Multiple Folders:** Select two folders in the Explorer view, right-click, and pick `Compare Selected Folders`.
+- **Multiple Files:** Select two files in the Explorer view, right-click and pick `Compare Selected Items`.
+- **Multiple Folders:** Select two folders in the Explorer view, right-click and pick `Compare Selected Items`.
 
 ### Text & Clipboard Comparisons
 

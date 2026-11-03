@@ -853,11 +853,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
-    registerCommand('.compareTwoFiles', (...a) => {
-        compareSelected(a);
-    });
-
-    registerCommand('.compareTwoFolders', (...a) => {
+    registerCommand('.compareSelected', (...a) => {
         compareSelected(a);
     });
 

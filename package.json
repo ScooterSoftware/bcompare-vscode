@@ -146,15 +146,9 @@
         "category": "Beyond Compare"
       },
       {
-        "command": "bcompare-vscode.compareTwoFiles",
-        "title": "Compare Selected Files",
-        "enablement": "listDoubleSelection === true && !explorerResourceIsFolder && resourceScheme === file",
-        "category": "Beyond Compare"
-      },
-      {
-        "command": "bcompare-vscode.compareTwoFolders",
-        "title": "Compare Selected Folders",
-        "enablement": "listDoubleSelection === true && explorerResourceIsFolder",
+        "command": "bcompare-vscode.compareSelected",
+        "title": "Compare Selected Items",
+        "enablement": "listDoubleSelection === true",
         "category": "Beyond Compare"
       },
       {
@@ -260,12 +254,7 @@
       ],
       "explorerMultiContextCompare": [
         {
-          "command": "bcompare-vscode.compareTwoFiles",
-          "when": "listDoubleSelection === true",
-          "group": "general@1"
-        },
-        {
-          "command": "bcompare-vscode.compareTwoFolders",
+          "command": "bcompare-vscode.compareSelected",
           "when": "listDoubleSelection === true",
           "group": "general@1"
         },
@@ -449,8 +438,8 @@
     "@types/vscode": "1.107.0",
     "@vscode/test-electron": "^3.1.0",
     "@vscode/vsce": "^4.1.0",
-    "eslint": "^10.13.0",
-    "glob": "^13.0.6",
+    "eslint": "^10.14.0",
+    "glob": "^14.0.3",
     "mocha": "^12.0.3",
     "prettier": "^3.9.10",
     "typescript": "~6.0.3",
