@@ -1,12 +1,12 @@
 # Open Files in Beyond Compare Directly from VS Code
 
-An intuitive extension to seamlessly launch [Beyond Compare](https://www.scootersoftware.com/) directly from the VS Code menus, sidebars, and open tabs
+Launch [Beyond Compare](https://www.scootersoftware.com/) directly from the VS Code menus, sidebars, and open tabs.
 
 ## Requirements
 
 - **Beyond Compare** must be installed.
 - **macOS Users:** The `bcomp` command line tool must be installed. In Beyond Compare, pick **Beyond Compare > Install Command Line Tools...** to enable it.
-- Compatible with Visual Studio Code on Windows, macOS, and Linux
+- Compatible with Visual Studio Code on Windows, macOS, and Linux.
 
 ---
 
